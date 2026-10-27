@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jigidi Automagic Solver</title>
+<meta name="description" content="A userscript that solves Jigidi jigsaw puzzles automatically. Install, update and read the documentation.">
+<link rel="alternate" hreflang="nb" href="https://knutos.github.io/jigidi-solver/">
+<link rel="alternate" hreflang="en" href="https://knutos.github.io/jigidi-solver/en.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2310b981' d='M5 8h3.5a2.5 2.5 0 1 1 5 0H17v3.5a2.5 2.5 0 1 1 0 5V20H5z'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f6f7f4; --surface: #ffffff; --surface-2: #eef1ec; --ink: #17201b; --ink-2: #4b5650; --line: #dde3dc;
+  --accent: #059669; --accent-ink: #ffffff; --accent-soft: #d6f2e6; --warn: #b45309; --warn-soft: #fdf0d8;
+  --note: #fdf7d7; --code: #eef1ec; --shadow: 0 1px 2px rgba(16,24,20,.06), 0 8px 24px -12px rgba(16,24,20,.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1412; --surface: #171d1a; --surface-2: #1e2622; --ink: #e8eee9; --ink-2: #a3b0a8; --line: #2a3430;
+    --accent: #34d399; --accent-ink: #053b2a; --accent-soft: #123a2c; --warn: #fbbf24; --warn-soft: #3a2c10;
+    --note: #2f2a14; --code: #1e2622; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1412; --surface: #171d1a; --surface-2: #1e2622; --ink: #e8eee9; --ink-2: #a3b0a8; --line: #2a3430;
+  --accent: #34d399; --accent-ink: #053b2a; --accent-soft: #123a2c; --warn: #fbbf24; --warn-soft: #3a2c10;
+  --note: #2f2a14; --code: #1e2622; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; }
+code { background: var(--code); padding: .1em .35em; border-radius: 4px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+/* header */
+header.top { padding: 40px 0 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.lang { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-2); flex: none; }
+.lang a { padding: 4px 12px; border-radius: 999px; color: var(--ink-2); text-decoration: none; font-weight: 600; font-size: .9rem; }
+.lang a[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.brand { display: flex; align-items: center; gap: 14px; }
+.logo { width: 52px; height: 52px; flex: none; }
+.logo .tr { fill: var(--surface-2); stroke: var(--line); stroke-width: 2.5; }
+.logo .pr { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 100.53; stroke-dashoffset: 30; transform: rotate(-90deg); transform-origin: 18px 18px; }
+.logo .pz { fill: var(--accent); }
+h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.15; margin: 0; letter-spacing: -.01em; }
+.tag { margin: 4px 0 0; color: var(--ink-2); }
+
+/* install card */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+.install { margin: 28px 0 0; padding: 24px; display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; }
+.vrow { display: flex; flex-wrap: wrap; gap: 8px 22px; color: var(--ink-2); font-size: .95rem; }
+.vrow b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.status { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 4px 12px 4px 10px; border-radius: 999px; font-weight: 600; font-size: .92rem; background: var(--surface-2); color: var(--ink-2); }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: .8; }
+.status.ok { background: var(--accent-soft); color: var(--accent); }
+.status.warn { background: var(--warn-soft); color: var(--warn); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px; border-radius: 999px; font-weight: 700; text-decoration: none; border: 1px solid transparent; cursor: pointer; font-size: 1rem; transition: filter .15s, transform .12s; }
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn:focus-visible, .tabs button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hint { grid-column: 1 / -1; margin: 0; font-size: .9rem; color: var(--ink-2); }
+
+/* getting started */
+section.start { margin: 36px 0 0; }
+h2.sec { font-size: 1.35rem; margin: 0 0 12px; }
+.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); margin-bottom: 14px; }
+.tabs button { border: 0; background: transparent; color: var(--ink-2); font: inherit; font-weight: 600; padding: 6px 16px; border-radius: 999px; cursor: pointer; min-height: 36px; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.steps li { padding: 18px; counter-increment: s; position: relative; }
+.steps li::before { content: counter(s); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; margin-bottom: 10px; }
+.steps h3 { margin: 0 0 4px; font-size: 1rem; }
+.steps p { margin: 0; color: var(--ink-2); font-size: .95rem; }
+.panel[hidden] { display: none; }
+.update { margin: 14px 0 0; padding: 16px 18px; color: var(--ink-2); font-size: .95rem; }
+.update b { color: var(--ink); }
+
+/* docs */
+section.docs { margin: 48px 0 0; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 36px; align-items: start; }
+nav.toc { position: sticky; top: 20px; font-size: .92rem; }
+nav.toc h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); margin: 0 0 8px; }
+nav.toc ol { list-style: none; margin: 0 0 14px; padding: 0; }
+nav.toc a { display: block; padding: 5px 10px; border-radius: 8px; color: var(--ink-2); text-decoration: none; }
+nav.toc a:hover { background: var(--surface-2); color: var(--ink); }
+nav.toc .pdf { display: inline-flex; margin-top: 4px; }
+article.doc { padding: 8px 32px 28px; min-width: 0; }
+article.doc h2 { font-size: 1.3rem; margin: 30px 0 8px; padding-top: 6px; scroll-margin-top: 16px; }
+article.doc h2:first-child { margin-top: 18px; }
+article.doc h3 { font-size: 1.05rem; margin: 22px 0 6px; }
+article.doc p, article.doc li { color: var(--ink); }
+article.doc ul { padding-left: 1.2em; }
+article.doc li { margin: 4px 0; }
+article.doc .note { background: var(--note); padding: 12px 14px; border-radius: 10px; }
+article.doc .cap { text-align: center; color: var(--ink-2); font-size: .9rem; margin-top: 4px; }
+article.doc .shot { display: block; margin: 10px auto 0; max-width: 100%; height: auto; border-radius: 12px; }
+article.doc pre { background: var(--code); padding: 12px 14px; border-radius: 10px; overflow-x: auto; }
+article.doc pre code { background: none; padding: 0; }
+.tbl { overflow-x: auto; margin: 10px 0 16px; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+th { background: var(--surface-2); font-weight: 650; }
+tr:last-child td { border-bottom: 0; }
+
+footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: .9rem; }
+footer p { margin: 4px 0; }
+
+@media (max-width: 860px) {
+  .install { grid-template-columns: 1fr; }
+  .actions { justify-content: flex-start; }
+  .steps { grid-template-columns: 1fr; }
+  section.docs { grid-template-columns: 1fr; gap: 16px; }
+  nav.toc { position: static; }
+  article.doc { padding: 4px 18px 20px; }
+}
+@media (max-width: 560px) {
+  header.top { flex-direction: column-reverse; gap: 14px; padding-top: 20px; }
+  .lang { align-self: flex-end; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 36 36" aria-hidden="true">
+        <circle class="tr" cx="18" cy="18" r="16"/><circle class="pr" cx="18" cy="18" r="16"/>
+        <g transform="translate(9 9) scale(.75)"><path class="pz" d="M5 8h3.5a2.5 2.5 0 1 1 5 0H17v3.5a2.5 2.5 0 1 1 0 5V20H5z"/></g>
+      </svg>
+      <div>
+        <h1>Jigidi Automagic Solver</h1>
+        <p class="tag">A userscript that solves Jigidi jigsaw puzzles automatically.</p>
+      </div>
+    </div>
+    <nav class="lang" aria-label="Language">
+      <a href="./" hreflang="nb" lang="nb" data-lang="nb">Norsk</a>
+      <a href="en.html" hreflang="en" lang="en" data-lang="en" aria-current="page">English</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card install" aria-label="Installation">
+      <div>
+        <p class="status" id="status" role="status">Checking installed version…</p>
+        <div class="vrow">
+          <span>Latest version <b>1.8.1</b></span>
+          <span>Installed <b id="installed">–</b></span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" id="install" href="jigidi-automagic-solver.user.js">Install</a>
+        <a class="btn ghost" href="docs/jigidi-automagic-solver-documentation.pdf">Documentation (PDF)</a>
+      </div>
+      <p class="hint" id="hint">Needs a userscript extension (see below). Reload the page after installing to see the installed version.</p>
+    </section>
+
+    <section class="start" aria-labelledby="start-h">
+      <h2 class="sec" id="start-h">Get started</h2>
+      <div class="tabs" role="tablist" aria-label="Device">
+        <button role="tab" id="t-pc" aria-controls="p-pc" aria-selected="true">Computer</button>
+        <button role="tab" id="t-ios" aria-controls="p-ios" aria-selected="false">iPad and iPhone</button>
+      </div>
+      <div class="panel" id="p-pc" role="tabpanel" aria-labelledby="t-pc">
+        <ol class="steps">
+          <li class="card"><h3>Install an extension</h3><p><b>Tampermonkey</b> or <b>Violentmonkey</b> from your browser's extension store.</p></li>
+          <li class="card"><h3>Install the script</h3><p>Press <b>Install</b> above and confirm in the dialog the extension shows.</p></li>
+          <li class="card"><h3>Solve a puzzle</h3><p>Open a puzzle on jigidi.com and press <b>Solve</b> in the panel at the bottom left.</p></li>
+        </ol>
+      </div>
+      <div class="panel" id="p-ios" role="tabpanel" aria-labelledby="t-ios" hidden>
+        <ol class="steps">
+          <li class="card"><h3>Install Userscripts</h3><p>Free on the App Store. Open the app and choose a folder for the scripts. Turn on the extension under <b>Settings → Safari → Extensions</b> (newer iPadOS: <b>Apps → Safari → Extensions</b>).</p></li>
+          <li class="card"><h3>Install the script</h3><p>Press <b>Install</b> above. The script opens as text. Tap the <code>&lt;/&gt;</code> icon in the address bar and choose install.</p></li>
+          <li class="card"><h3>Solve a puzzle</h3><p>Open a puzzle on jigidi.com, check under <code>&lt;/&gt;</code> that the script is on, and press <b>Solve</b>.</p></li>
+        </ol>
+      </div>
+      <p class="card update"><b>Updating:</b> Tampermonkey and Violentmonkey update the script automatically from GitHub. If you want a new version right away, or you use an iPad, open this page and press <b>Update</b> when it appears.</p>
+    </section>
+
+    <section class="docs" aria-label="Documentation">
+      <nav class="toc" aria-label="Contents">
+        <h2>Documentation</h2>
+        <ol><li><a href="#d1">Overview</a></li><li><a href="#d2">Installing and updating</a></li><li><a href="#d3">Usage</a></li><li><a href="#d4">How it works</a></li><li><a href="#d5">Speed levels</a></li><li><a href="#d6">Settings</a></li><li><a href="#d7">Error messages and troubleshooting</a></li><li><a href="#d8">Limitations</a></li><li><a href="#d9">Changelog</a></li></ol>
+        <a class="btn ghost pdf" href="docs/jigidi-automagic-solver-documentation.pdf">Download PDF</a>
+      </nav>
+      <article class="card doc">
+<h2 id="d1">1. Overview</h2>
+<p>Jigidi Automagic Solver is a userscript that solves jigsaw puzzles on jigidi.com automatically. The script reads where every piece belongs directly from the game's own drawing code, then drags the pieces into place one by one with synthetic mouse events. No image recognition is needed.</p>
+<p>The script, this documentation and the install page live on GitHub: <b>https://github.com/knutos/jigidi-solver</b>. The install page is <b>https://knutos.github.io/jigidi-solver/en.html</b>.</p>
+<h2 id="d2">2. Installing and updating</h2>
+<p>The script needs a userscript extension in the browser, for example <b>Tampermonkey</b> or <b>Violentmonkey</b>.</p>
+<ul><li>Install the extension from your browser's extension store.</li><li>Open the install page (https://knutos.github.io/jigidi-solver/en.html) and press <b>Install</b>. The extension then shows an install dialog.</li><li>Confirm the installation. The script runs automatically on puzzle pages on jigidi.com.</li></ul>
+<p class="note"><b>Important:</b> The script must run at <i>document-start</i> and in the page context (<code>@inject-into page</code>), otherwise it cannot hook into the game before the game starts. If you have another Jigidi extension enabled (e.g. "Bingo Solver"), turn it off.</p>
+<h3>2.1 Updating</h3>
+<ul><li><b>Automatically:</b> Tampermonkey and Violentmonkey check GitHub for new versions regularly (via <code>@updateURL</code>) and update the script themselves.</li><li><b>Right away:</b> Open the install page. It shows which version you have installed and which is the newest. If there is a newer version, press <b>Update</b>.</li><li><b>From the extension:</b> In Tampermonkey: Dashboard → select the script → "Check for updates".</li></ul>
+<p>The install page can only see the installed version if the extension is allowed to run the script on that page. There, the script does nothing except report its version.</p>
+<h3>2.2 iPad and iPhone (Safari)</h3>
+<p>Safari on iPad and iPhone can run userscripts with the <b>Userscripts</b> app (free on the App Store). <b>Tampermonkey</b> is also available for Safari and works the same way as on a computer.</p>
+<ul><li>Install <b>Userscripts</b> from the App Store and open the app once. Choose a folder for the scripts (e.g. a folder called "Userscripts" in iCloud Drive).</li><li>Turn on the extension: <b>Settings → Safari → Extensions → Userscripts</b> (on newer iPadOS: <b>Settings → Apps → Safari → Extensions</b>). Give it access to jigidi.com, or to all websites.</li><li>Open the install page in Safari and press <b>Install</b>. The script opens as text. Tap the <code>&lt;/&gt;</code> icon in the address bar and choose install.</li><li>Open a puzzle on jigidi.com. Tap the <code>&lt;/&gt;</code> icon and check that <b>Jigidi Automagic Solver</b> is turned on.</li></ul>
+<p>To update on iPad: open the install page and install again the same way. The panel works as on a computer: press <b>Solve</b>, press <b>Stop</b> to cancel (Esc only works with a keyboard), drag the panel with your finger, and tap the ring to minimise it.</p>
+<h2 id="d3">3. Usage</h2>
+<p>The control panel is a small dark "pill" in the bottom-left corner. On the left is a ring that shows progress, in the middle the status, and on the right a button. The picture shows the panel in its different states:</p>
+<img class="shot" src="docs/panel.png" width="360" height="400" alt="The control panel in its loading, ready, solving, done and minimised states" loading="lazy">
+<p class="cap">Panel states, from the top: loading, ready, solving, done and minimised.</p>
+<h3>3.1 Solving a puzzle</h3>
+<ul><li>Open a puzzle on jigidi.com. While the pieces load, the ring spins and the button is grey ("<i>Loading puzzle…</i>").</li><li>When the panel shows "<i>N pieces · ready</i>", press <b>Solve</b>.</li><li>While solving, the ring fills up as pieces are placed, and the status line shows for example "<i>271/500 · 107.0/s · 3s left</i>": pieces placed, pieces per second and estimated time left.</li><li>The button turns red and says <b>Stop</b>. Press it, or press <b>Esc</b>, to cancel. Pieces already placed stay where they are.</li><li>When the script is done, the panel shows the number of pieces placed, the time taken and pieces per second.</li></ul>
+<h3>3.2 Colours and symbols</h3>
+<div class="tbl"><table><thead><tr><th>State</th><th>Looks like</th><th>Meaning</th></tr></thead><tbody><tr><td>Loading</td><td>Spinning ring, grey button</td><td>The pieces are not fully registered yet.</td></tr><tr><td>Ready</td><td>Green "Solve" button</td><td>The puzzle has been recognised and can be solved.</td></tr><tr><td>Solving</td><td>Ring fills up, red "Stop" button</td><td>Solving is in progress. Real mouse input to the game is blocked.</td></tr><tr><td>Done</td><td>Green check mark, full ring</td><td>All pieces are in place.</td></tr><tr><td>Partial</td><td>Yellow colour</td><td>Solving was stopped, or some pieces failed.</td></tr><tr><td>Error</td><td>Red colour and an error message</td><td>See chapter 7.</td></tr></tbody></table></div>
+<h3>3.3 Moving and minimising the panel</h3>
+<ul><li><b>Move:</b> Drag the panel anywhere on the screen. It always stays inside the window.</li><li><b>Minimise:</b> Click the ring to shrink the panel to just the ring. Click again to show the whole panel. The ring keeps updating while minimised, and hovering over it shows the status as a tooltip.</li><li><b>Remembered:</b> Position and minimised state are saved in the browser (the <code>jas-ui</code> key in localStorage) and restored next time.</li></ul>
+<p>While the script works, real mouse, pointer and touch events to the game are blocked, so you cannot move pieces by accident. The panel itself can still be used. The panel lives in its own Shadow DOM, so Jigidi's style sheets cannot affect how it looks.</p>
+<h2 id="d4">4. How it works</h2>
+<h3>4.1 Hooks</h3>
+<p>When the page loads, the script replaces a few built-in browser functions with its own versions that record data and then call the original. All information is stored in the global object <code>window.__jas</code>.</p>
+<div class="tbl"><table><thead><tr><th>Function</th><th>What the script captures</th></tr></thead><tbody><tr><td><code>addEventListener</code></td><td>All mouse, pointer and touch listeners the game registers, so the script can call them directly.</td></tr><tr><td><code>iframe.contentWindow</code></td><td>Also hooks addEventListener inside iframes, so the game cannot get around the hooks by fetching a "clean" copy of the function from an iframe.</td></tr><tr><td><code>removeEventListener</code></td><td>Removes listeners from the list again, so the script never calls stale listeners.</td></tr><tr><td><code>setPointerCapture</code></td><td>Emulates pointer capture for the script's own pointer events. Without this the browser would throw an error, because there is no real active pointer.</td></tr><tr><td><code>putImageData</code></td><td>Marks that a new piece is being cut out on the game's scratch canvas.</td></tr><tr><td><code>drawImage</code></td><td>Three cases: (1) the source offset of the piece in the original image, (2) which canvas holds which piece, (3) where the piece is drawn on screen (position, scale, centre).</td></tr></tbody></table></div>
+<p>Because Jigidi cuts the pieces in solution order (row by row), the order and the source offsets together give the complete solution.</p>
+<h3>4.2 The solver</h3>
+<p>When you press <b>Solve</b>, the solver goes through these steps:</p>
+<div class="tbl"><table><thead><tr><th>Step</th><th>Description</th></tr></thead><tbody><tr><td>Recognition</td><td>Reads the dimensions from the text "(columns × rows)" on the page and checks that the count matches the number of pieces cut out.</td></tr><tr><td>Zoom</td><td>Zooms out with the "−" button until the finished puzzle takes up less than half of the board, less than 75 % of its width, and fits in height. If it still does not fit, the script stops with a message.</td></tr><tr><td>Continue</td><td>If there is already an assembled part (from an earlier run or placed by hand), the script builds on the largest one. If it lies partly off the board, the spot it will move to is cleared first, and then the whole part is dragged in.</td></tr><tr><td>Choose anchor</td><td>Otherwise the script tries every piece as a fixed starting point, and picks the one where the finished puzzle fits on the board and the fewest loose pieces lie in the target area. The anchor piece is not moved.</td></tr><tr><td>Place pieces</td><td>Places the pieces in breadth-first order outward from the anchor, so every piece is dropped next to a neighbour already in place and snaps on the first try.</td></tr><tr><td>Clear as it goes</td><td>Just before a piece is placed, loose pieces lying on or right next to its spot are moved away, topmost first. If such a piece can already go to its own spot (it has a placed neighbour), it is placed there directly. Otherwise it is parked outside the target area.</td></tr><tr><td>Retry</td><td>Pieces that failed are tried again in a new round (2 rounds by default, up to 12 attempts per piece).</td></tr><tr><td>Count</td><td>Finally counts how many pieces actually sit correctly relative to their neighbours.</td></tr></tbody></table></div>
+<h3>4.3 Wrong grabs and correction</h3>
+<ul><li><b>Grab point:</b> The script grabs the middle of the piece, not a transparent corner. If the middle is covered by a piece lying on top, up to eight other points are tried.</li><li><b>Wrong piece moved:</b> If a loose piece is moved by mistake, it is parked outside the target area.</li><li><b>Finished part moved:</b> If the assembled puzzle is moved by mistake, it is dragged straight back.</li><li><b>Lucky snap:</b> If a piece snaps into place on its own, it is recorded as placed.</li></ul>
+<h3>4.4 Input mode</h3>
+<p>Jigidi comes in several variants that take input in different ways. At the start of every solve, the script checks which listeners the game has registered and chooses a mode automatically:</p>
+<div class="tbl"><table><thead><tr><th>Mode</th><th>When it is used</th><th>How the script drags pieces</th></tr></thead><tbody><tr><td><code>mouse</code></td><td>The game has a <code>mousedown</code> listener on the board (the original variant).</td><td><code>mousedown</code> on the board, <code>mousemove</code> on the document, <code>mouseup</code> on the window.</td></tr><tr><td><code>pointer</code></td><td>The game uses only pointer events, e.g. on a DIV element around the board.</td><td><code>pointerdown</code>, <code>pointermove</code> and <code>pointerup</code> are sent through the script's own event dispatcher that mimics the browser: hit testing, capture, target and bubble phases, stopPropagation and pointer capture. Handlers set as properties (<code>onpointerdown = …</code>) are called too.</td></tr><tr><td><code>native</code></td><td>The script knows none of the game's listeners, e.g. because it was loaded too late.</td><td>Real events are sent with <code>dispatchEvent</code>: pointer events and then mouse events, the way the browser does. Works as long as the game does not require <code>isTrusted</code>.</td></tr></tbody></table></div>
+<p>If the game does not react to three drags in a row, the script tries the other modes before slowing down. This only happens while no mode has worked yet. Once a mode has moved pieces, it is kept for the rest of the solve, and also the next time you press Solve on the same page. The script's own panel listeners are ignored.</p>
+<p>The chosen mode is written to the browser console as "<i>[Automagic Solver] input mode: pointer</i>" (or <i>mouse</i> / <i>native</i>). The zoom button is found by id, label or a lone "−", and is pressed first through known listeners and then with ordinary browser events. The mouse wheel is not used, because it may pan the board instead of zooming.</p>
+<h2 id="d5">5. Speed levels</h2>
+<p>The script starts at the fastest level and automatically drops one level if drags repeatedly move nothing. The panel then shows "<i>Switching to speed level …</i>".</p>
+<div class="tbl"><table><thead><tr><th>Level</th><th>Method</th><th>Typical time per drag</th></tr></thead><tbody><tr><td>0</td><td>The whole drag is sent in one synchronous burst (down, one move, up). The wait afterwards adapts to the game, see below.</td><td>about 2–25 ms</td></tr><tr><td>1</td><td>One screen refresh (animation frame) between each event.</td><td>about 80–120 ms</td></tr><tr><td>2</td><td>The original timed method from 1.4.1 (fixed pauses).</td><td>about 170 ms +</td></tr></tbody></table></div>
+<h3>5.1 Wait mode</h3>
+<p>At level 0, the script measures over the first eight drags how long the game needs to draw the result, and then picks the fastest wait mode that never missed a change:</p>
+<div class="tbl"><table><thead><tr><th>Wait mode</th><th>When it is chosen</th><th>Wait after each drag</th></tr></thead><tbody><tr><td><code>sync</code></td><td>The game redraws the board as soon as the piece is dropped.</td><td>None.</td></tr><tr><td><code>f1</code></td><td>The game redraws on the next screen refresh.</td><td>One screen refresh (about 17 ms at 60 Hz).</td></tr><tr><td><code>full</code></td><td>The game animates the pieces over several screen refreshes.</td><td>Until nothing moves any more.</td></tr></tbody></table></div>
+<p>If the script still sees a change after it stopped waiting (three times), it moves to the next, safer mode. The chosen mode is written to the browser console as "<i>[Automagic Solver] wait mode: sync</i>". In a hidden tab, waiting falls back to a 60 ms timer.</p>
+<p>Measured on a test copy of the game with 300 pieces, version 1.6.1 took about 15 seconds. From version 1.7.0 it takes about 1.4 seconds when the game redraws immediately, and about 7 seconds when it redraws on the next screen refresh. How fast it is on jigidi.com depends on how the game draws and on the refresh rate of your screen.</p>
+<h2 id="d6">6. Settings</h2>
+<p>Settings are passed as an object to <code>__jas.solve()</code>. The panel uses the defaults, but you can call the solver directly from the browser console:</p>
+<pre><code>await __jas.solve({
+  level: 1,          // start at level 1 instead of 0
+  maxTries: 20,
+  log: console.log,
+});</code></pre>
+<div class="tbl"><table><thead><tr><th>Setting</th><th>Default</th><th>Meaning</th></tr></thead><tbody><tr><td><code>level</code></td><td>0</td><td>Starting speed level (0–2).</td></tr><tr><td><code>wait</code></td><td>'cal'</td><td>Wait mode at level 0: <code>cal</code> (measure automatically), <code>sync</code>, <code>f1</code> or <code>full</code>.</td></tr><tr><td><code>stepDelay</code></td><td>12</td><td>Pause in ms between events at level 2.</td></tr><tr><td><code>moveSteps</code></td><td>5</td><td>Number of mouse moves per drag at level 2 (level 0 uses 1, level 1 uses 2).</td></tr><tr><td><code>settle</code></td><td>60</td><td>Extra pause in ms after dropping at level 2.</td></tr><tr><td><code>margin</code></td><td>20</td><td>Distance in canvas pixels from the board edge to the target area.</td></tr><tr><td><code>maxTries</code></td><td>12</td><td>Maximum attempts per piece per round.</td></tr><tr><td><code>passes</code></td><td>2</td><td>Number of rounds over pieces not yet placed.</td></tr><tr><td><code>log</code></td><td>–</td><td>Function that receives status messages.</td></tr><tr><td><code>stop</code></td><td>–</td><td>Function that returns true when the solver should stop.</td></tr><tr><td><code>onProgress</code></td><td>–</td><td>Called after each piece with (placed, total, ok).</td></tr></tbody></table></div>
+<p>The return value is an object: <code>{ placed, total, stopped, level, wait }</code>, where <code>level</code> is the speed level and <code>wait</code> the wait mode the solver ended up with.</p>
+<h2 id="d7">7. Error messages and troubleshooting</h2>
+<div class="tbl"><table><thead><tr><th>Message / symptom</th><th>Cause and fix</th></tr></thead><tbody><tr><td>Loading puzzle… (ring keeps spinning)</td><td>The pieces have not been drawn yet. Wait, or reload the page. If it stays like this, the script probably did not run at document-start – check the extension's settings. Also turn off other Jigidi scripts (e.g. "Bingo Solver").</td></tr><tr><td>Still loading…</td><td>Not all pieces are registered yet. Wait a moment and press Solve again.</td></tr><tr><td>Puzzle not recognized</td><td>The text "(columns × rows)" was not found, or it does not match the number of pieces. Jigidi may have changed the page layout.</td></tr><tr><td>Puzzle too small</td><td>Puzzles with only one row or column are not supported.</td></tr><tr><td>Game board not found</td><td>The game's canvas (wider than 200 pixels) was not found.</td></tr><tr><td>Switching to speed level …</td><td>Not an error: the game needs slower input, and the script adapts.</td></tr><tr><td>The game ignores the solver's input</td><td>Eight drags in a row at the slowest speed moved nothing, so the script stopped instead of trying forever. Jigidi has probably changed how the game takes input. See the browser console for the chosen mode (section 4.4).</td></tr><tr><td>The game ignores the solver's input – the script was injected too late</td><td>The userscript extension loaded the script after the game had started, and the game does not accept events that do not come from a real mouse. Reload the page. If it happens again: in Tampermonkey, set Settings → Config mode "Advanced" → Experimental → Inject Mode to "Instant" (if available).</td></tr><tr><td>The puzzle doesn't fit on the board</td><td>The script could not zoom out far enough. Press "−" in Jigidi until the whole puzzle fits, and press Solve again.</td></tr><tr><td>Could not move the assembled part onto the board</td><td>The assembled part lies off the board and could not be dragged in. Drag it in yourself and press Solve again.</td></tr><tr><td>The panel is yellow after solving</td><td>Some pieces were not placed, or you stopped solving. Press Solve again to continue.</td></tr><tr><td>The panel does not appear on iPad</td><td>Check that the Userscripts extension has access to jigidi.com, and that the script is turned on under the <code>&lt;/&gt;</code> icon. Reload the page.</td></tr><tr><td>The panel is gone</td><td>It may have ended up off-screen after the window was resized. Delete <code>jas-ui</code> in localStorage and reload the page.</td></tr><tr><td>The install page says "not found"</td><td>The extension does not run the script on the install page (e.g. Userscripts without access to github.io). The script may still be installed; check the version in the extension.</td></tr><tr><td>Many "FAILED" pieces</td><td>Try <code>__jas.solve({ wait: 'full' })</code> from the console. If that does not help, try starting at level 1 or 2, or increase maxTries. Also check whether the pieces are rotated – rotation is not supported.</td></tr></tbody></table></div>
+<h2 id="d8">8. Limitations</h2>
+<ul><li><b>Rotation:</b> Puzzles with rotated pieces are not supported.</li><li><b>Depends on how Jigidi is built:</b> The script assumes that pieces are cut in solution order on a 2D canvas, that there is a zoom button ("−") and that the dimensions appear as "(c × r)" on the page. If Jigidi changes any of this, the script stops working until it is updated.</li><li><b>WebGL / Web Workers:</b> If Jigidi draws with WebGL or OffscreenCanvas in a worker, the hooks see nothing.</li><li><b>Detection:</b> Very even, straight and fast drags are clearly different from human use. If Jigidi logs timing or movement patterns on the server, solves by the script can be detected. Higher speed makes this signal clearer.</li><li><b>Terms of use:</b> Using automation may be against Jigidi's terms. You are responsible for your own use.</li></ul>
+<h2 id="d9">9. Changelog</h2>
+<h3>Version 1.8.1</h3>
+<ul><li>New home: https://github.com/knutos/jigidi-solver. Automatic updates now come from there.</li><li>New install page (https://knutos.github.io/jigidi-solver/) with an install/update button, version check and documentation, in Norwegian and English.</li><li>The script reports the installed version on the install page, and does nothing else there.</li><li>The documentation is built from one source into both PDF and web page.</li></ul>
+<h3>Version 1.8.0</h3>
+<ul><li>Fixed: large puzzles stopped halfway. Zoom did not work on newer Jigidi, so the finished puzzle did not fit, and pieces had to be placed off the board.</li><li>The zoom button is now found even without a known id, and is pressed with ordinary browser events when the listeners are unknown.</li><li>Removed the mouse wheel as a zoom fallback; it could pan the whole board.</li><li>Checks before starting that the puzzle fits, and gives a clear message if not.</li><li>Builds on an already assembled part, and moves it onto the board if needed (after clearing the space).</li><li>Tested on iPad with Safari, and on a copy of the game with 594 pieces (27 × 22) that has to be zoomed out: done in about 7 seconds.</li></ul>
+<h3>Version 1.7.2</h3>
+<ul><li>Fixed: solving could stop halfway with "The game ignores the solver's input". After a few random drags with no effect, the script switched away from an input mode that worked, and never came back to it.</li><li>A mode that has moved pieces is now kept for the rest of the solve and for the next Solve on the same page.</li></ul>
+<h3>Version 1.7.1</h3>
+<ul><li>Fixed: "The game ignores the solver's input" when the script did not capture the game's listeners. The script's own panel listeners were wrongly taken for the game's, so the wrong mode was chosen.</li><li>New "native" mode that sends real events with dispatchEvent when the game's listeners are unknown.</li><li>Support for handlers set as properties (onpointerdown = …).</li><li>Hooks inside iframes too, so a "clean" addEventListener from an iframe does not bypass the script.</li><li>Tries the other modes automatically before lowering the speed.</li><li>Console warning when the script was loaded too late.</li></ul>
+<h3>Version 1.7.0</h3>
+<ul><li>Adaptive wait mode (sync / f1 / full): the script measures how fast the game draws, and waits no longer than needed.</li><li>Automatic downgrade to a safer wait mode if a change shows up too late.</li><li>Clearing happens just before each piece is placed instead of up front. Loose pieces that can be placed are placed directly instead of being parked first.</li><li>One mouse move per drag at level 0 (previously 2).</li><li>New setting: wait.</li><li>Measured on a test copy with 300 pieces: from about 15 s to about 1.4 s (game redraws immediately) or about 7 s (game redraws on the next screen refresh).</li></ul>
+<h3>Version 1.6.1</h3>
+<ul><li>Support for Jigidi variants that use only pointer events. Fixed a bug where the script hung on some PCs.</li><li>Automatic choice of input mode (mouse or pointer) on every solve.</li><li>Emulation of pointer capture (setPointerCapture) for the script's own events.</li><li>The script stops with a clear error message when the game does not react, instead of trying forever.</li></ul>
+<h3>Version 1.6.0</h3>
+<ul><li>New name: <b>Jigidi Automagic Solver</b> (previously Jigidi Auto Solver).</li><li>New compact control panel: progress ring, time estimate and pieces per second while solving.</li><li>Colour-coded status (green, yellow, red) and a check mark when the puzzle is done.</li><li>The panel can be moved and minimised. Position and state are remembered.</li><li>Esc stops solving.</li><li>The panel lives in a Shadow DOM and is not affected by Jigidi's style sheets.</li></ul>
+<h3>Version 1.5.0</h3>
+<ul><li>Adaptive waiting after each drag (screen refresh + movement detection) instead of fixed pauses.</li><li>Three speed levels with automatic step-down.</li><li>Smart choice of anchor piece, so the puzzle is built where the fewest loose pieces already lie.</li><li>Grab point in the middle of the piece, avoiding pieces lying on top.</li><li>Breadth-first order outward from the anchor.</li><li>Caching of the game's canvas and event listeners; fewer status updates.</li><li>Zoom waits for the board to stand still instead of a fixed 600 ms.</li></ul>
+<h3>Version 1.4.1</h3>
+<p>The starting point: "Jigidi Auto Solver" by WorlockM, with fixed timed drags and the build area at the top left.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <p>Source code and issues: <a href="https://github.com/knutos/jigidi-solver">https://github.com/knutos/jigidi-solver</a> · MIT licence · Based on "Jigidi Auto Solver" by WorlockM.</p>
+    <p>Using automation may be against Jigidi's terms. You are responsible for your own use.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const LATEST = '1.8.1', LANG = 'en';
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+  for (const a of document.querySelectorAll('.lang a')) a.addEventListener('click', () => store('jas-lang', a.dataset.lang));
+  if (LANG === 'nb' && !store('jas-lang')) {
+    const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+    if (!langs.some((l) => /^(nb|nn|no)\b/i.test(l))) { location.replace('en.html' + location.hash); return; }
+  }
+  const $ = (id) => document.getElementById(id);
+  const num = (v) => String(v).split('.').map((x) => parseInt(x, 10) || 0);
+  const cmp = (a, b) => { const x = num(a), y = num(b); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
+
+  const T = {"notFound": "not found", "install": "Install", "updateTo": "Update to", "reinstall": "Reinstall", "stNone": "Not found on this device", "stNew": "New version available", "stOk": "Up to date", "stNewer": "Newer than the published version", "hintNone": "Needs a userscript extension (see below). If the script is already installed but the extension doesn't run it on this page, it shows as \"not found\".", "hintNew": "Press Update and confirm in the extension. Reload the page afterwards to check.", "hintOk": "You have the latest version. The extension checks for updates by itself."};
+  let shown = false;
+  function show(v) {
+    shown = true;
+    const st = $('status'), btn = $('install'), hint = $('hint');
+    $('installed').textContent = v || T.notFound;
+    if (!v) {
+      st.className = 'status'; st.textContent = T.stNone;
+      btn.textContent = T.install;
+      hint.textContent = T.hintNone;
+    } else if (cmp(v, LATEST) < 0) {
+      st.className = 'status warn'; st.textContent = T.stNew;
+      btn.textContent = T.updateTo + ' ' + LATEST;
+      hint.textContent = T.hintNew;
+    } else {
+      st.className = 'status ok'; st.textContent = cmp(v, LATEST) > 0 ? T.stNewer : T.stOk;
+      btn.textContent = T.reinstall;
+      btn.classList.replace('primary', 'ghost');
+      hint.textContent = T.hintOk;
+    }
+  }
+  const now = document.documentElement.getAttribute('data-jas-installed');
+  if (now) show(now);
+  else {
+    addEventListener('jas-installed', (e) => show(e.detail));
+    setTimeout(() => { const v = document.documentElement.getAttribute('data-jas-installed'); if (!shown) show(v); }, 1200);
+  }
+
+  // Tabs; open the iPad/iPhone tab on Apple touch devices.
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  function select(t) {
+    for (const x of tabs) { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; $(x.getAttribute('aria-controls')).hidden = !on; }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; select(n); n.focus(); }
+    });
+  });
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  select(ios ? $('t-ios') : $('t-pc'));
+})();
+</script>
+</body>
+</html>

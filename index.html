@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jigidi Automagic Solver</title>
 <meta name="description" content="Brukerskript som legger Jigidi-puslespill automatisk. Installer, oppdater og les dokumentasjonen.">
+<link rel="alternate" hreflang="nb" href="https://knutos.github.io/jigidi-solver/">
+<link rel="alternate" hreflang="en" href="https://knutos.github.io/jigidi-solver/en.html">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2310b981' d='M5 8h3.5a2.5 2.5 0 1 1 5 0H17v3.5a2.5 2.5 0 1 1 0 5V20H5z'/%3E%3C/svg%3E">
 <style>
 :root {
@@ -33,7 +35,10 @@ code { background: var(--code); padding: .1em .35em; border-radius: 4px; }
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 
 /* header */
-header.top { padding: 40px 0 8px; }
+header.top { padding: 40px 0 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.lang { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-2); flex: none; }
+.lang a { padding: 4px 12px; border-radius: 999px; color: var(--ink-2); text-decoration: none; font-weight: 600; font-size: .9rem; }
+.lang a[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .brand { display: flex; align-items: center; gap: 14px; }
 .logo { width: 52px; height: 52px; flex: none; }
 .logo .tr { fill: var(--surface-2); stroke: var(--line); stroke-width: 2.5; }
@@ -113,6 +118,10 @@ footer p { margin: 4px 0; }
   nav.toc { position: static; }
   article.doc { padding: 4px 18px 20px; }
 }
+@media (max-width: 560px) {
+  header.top { flex-direction: column-reverse; gap: 14px; padding-top: 20px; }
+  .lang { align-self: flex-end; }
+}
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
 </style>
 </head>
@@ -129,6 +138,10 @@ footer p { margin: 4px 0; }
         <p class="tag">Brukerskript som legger Jigidi-puslespill automatisk.</p>
       </div>
     </div>
+    <nav class="lang" aria-label="Språk">
+      <a href="./" hreflang="nb" lang="nb" data-lang="nb" aria-current="page">Norsk</a>
+      <a href="en.html" hreflang="en" lang="en" data-lang="en">English</a>
+    </nav>
   </header>
 
   <main>
@@ -240,7 +253,7 @@ footer p { margin: 4px 0; }
 <ul><li><b>Rotasjon:</b> Puslespill med roterte brikker støttes ikke.</li><li><b>Avhengig av Jigidis oppbygning:</b> Skriptet forutsetter at brikkene klippes i fasit-rekkefølge med 2D-canvas, at det finnes en zoomknapp («−») og at dimensjonene står som «(k × r)» på siden. Endrer Jigidi noe av dette, slutter skriptet å virke til det oppdateres.</li><li><b>WebGL / Web Workers:</b> Tegner Jigidi med WebGL eller OffscreenCanvas i en worker, ser krokene ingenting.</li><li><b>Oppdagelse:</b> Svært jevne, rettlinjede og raske drag skiller seg tydelig fra menneskelig bruk. Dersom Jigidi logger tidsbruk eller bevegelsesmønster på serveren, kan løsninger fra skriptet oppdages. Høyere hastighet gjør dette signalet tydeligere.</li><li><b>Bruksvilkår:</b> Bruk av automatisering kan være i strid med Jigidis vilkår. Brukeren er selv ansvarlig.</li></ul>
 <h2 id="d9">9. Endringslogg</h2>
 <h3>Versjon 1.8.1</h3>
-<ul><li>Nytt hjem: https://github.com/knutos/jigidi-solver. Automatiske oppdateringer kommer nå derfra.</li><li>Ny installasjonsside (https://knutos.github.io/jigidi-solver/) med installer-/oppdater-knapp, versjonssjekk og dokumentasjon.</li><li>Skriptet melder fra om installert versjon på installasjonssiden, og gjør ingenting annet der.</li><li>Dokumentasjonen bygges fra én kilde til både PDF og nettside.</li></ul>
+<ul><li>Nytt hjem: https://github.com/knutos/jigidi-solver. Automatiske oppdateringer kommer nå derfra.</li><li>Ny installasjonsside (https://knutos.github.io/jigidi-solver/) med installer-/oppdater-knapp, versjonssjekk og dokumentasjon, på norsk og engelsk.</li><li>Skriptet melder fra om installert versjon på installasjonssiden, og gjør ingenting annet der.</li><li>Dokumentasjonen bygges fra én kilde til både PDF og nettside.</li></ul>
 <h3>Versjon 1.8.0</h3>
 <ul><li>Rettet: store puslespill stoppet midtveis. Zoom virket ikke på nyere Jigidi, så det ferdige puslespillet fikk ikke plass, og brikker skulle legges utenfor brettet.</li><li>Zoomknappen finnes nå også uten kjent id, og trykkes med vanlige nettleserhendelser når lytterne er ukjente.</li><li>Fjernet musehjul som zoom-reserve; det kunne flytte hele brettet.</li><li>Sjekker før start at puslespillet får plass, og gir en tydelig melding hvis ikke.</li><li>Bygger videre på en allerede sammensatt del, og flytter den inn på brettet om nødvendig (etter å ha ryddet plassen).</li><li>Testet på iPad med Safari, og på kopi av spillet med 594 brikker (27 × 22) som må zoomes ut: ferdig på ca. 7 sekunder.</li></ul>
 <h3>Versjon 1.7.2</h3>
@@ -269,29 +282,36 @@ footer p { margin: 4px 0; }
 
 <script>
 (function () {
-  const LATEST = '1.8.1';
+  const LATEST = '1.8.1', LANG = 'nb';
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+  for (const a of document.querySelectorAll('.lang a')) a.addEventListener('click', () => store('jas-lang', a.dataset.lang));
+  if (LANG === 'nb' && !store('jas-lang')) {
+    const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+    if (!langs.some((l) => /^(nb|nn|no)\b/i.test(l))) { location.replace('en.html' + location.hash); return; }
+  }
   const $ = (id) => document.getElementById(id);
   const num = (v) => String(v).split('.').map((x) => parseInt(x, 10) || 0);
   const cmp = (a, b) => { const x = num(a), y = num(b); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
 
+  const T = {"notFound": "ikke funnet", "install": "Installer", "updateTo": "Oppdater til", "reinstall": "Installer på nytt", "stNone": "Ikke funnet på denne enheten", "stNew": "Ny versjon tilgjengelig", "stOk": "Oppdatert", "stNewer": "Nyere enn publisert versjon", "hintNone": "Krever en brukerskript-utvidelse (se under). Er skriptet allerede installert, men utvidelsen ikke kjører det på denne siden, vises det som «ikke funnet».", "hintNew": "Trykk Oppdater og bekreft i utvidelsen. Last siden på nytt etterpå for å sjekke.", "hintOk": "Du har nyeste versjon. Utvidelsen ser selv etter oppdateringer."};
   let shown = false;
   function show(v) {
     shown = true;
     const st = $('status'), btn = $('install'), hint = $('hint');
-    $('installed').textContent = v || 'ikke funnet';
+    $('installed').textContent = v || T.notFound;
     if (!v) {
-      st.className = 'status'; st.textContent = 'Ikke funnet på denne enheten';
-      btn.textContent = 'Installer';
-      hint.textContent = 'Krever en brukerskript-utvidelse (se under). Er skriptet allerede installert, men utvidelsen ikke kjører det på denne siden, vises det som «ikke funnet».';
+      st.className = 'status'; st.textContent = T.stNone;
+      btn.textContent = T.install;
+      hint.textContent = T.hintNone;
     } else if (cmp(v, LATEST) < 0) {
-      st.className = 'status warn'; st.textContent = 'Ny versjon tilgjengelig';
-      btn.textContent = 'Oppdater til ' + LATEST;
-      hint.textContent = 'Trykk Oppdater og bekreft i utvidelsen. Last siden på nytt etterpå for å sjekke.';
+      st.className = 'status warn'; st.textContent = T.stNew;
+      btn.textContent = T.updateTo + ' ' + LATEST;
+      hint.textContent = T.hintNew;
     } else {
-      st.className = 'status ok'; st.textContent = cmp(v, LATEST) > 0 ? 'Nyere enn publisert versjon' : 'Oppdatert';
-      btn.textContent = 'Installer på nytt';
+      st.className = 'status ok'; st.textContent = cmp(v, LATEST) > 0 ? T.stNewer : T.stOk;
+      btn.textContent = T.reinstall;
       btn.classList.replace('primary', 'ghost');
-      hint.textContent = 'Du har nyeste versjon. Utvidelsen ser selv etter oppdateringer.';
+      hint.textContent = T.hintOk;
     }
   }
   const now = document.documentElement.getAttribute('data-jas-installed');

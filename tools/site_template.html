@@ -1,10 +1,12 @@
 <!doctype html>
-<html lang="nb">
+<html lang="{{LANG}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jigidi Automagic Solver</title>
-<meta name="description" content="Brukerskript som legger Jigidi-puslespill automatisk. Installer, oppdater og les dokumentasjonen.">
+<meta name="description" content="{{t.meta}}">
+<link rel="alternate" hreflang="nb" href="https://knutos.github.io/jigidi-solver/">
+<link rel="alternate" hreflang="en" href="https://knutos.github.io/jigidi-solver/en.html">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2310b981' d='M5 8h3.5a2.5 2.5 0 1 1 5 0H17v3.5a2.5 2.5 0 1 1 0 5V20H5z'/%3E%3C/svg%3E">
 <style>
 :root {
@@ -33,7 +35,10 @@ code { background: var(--code); padding: .1em .35em; border-radius: 4px; }
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 
 /* header */
-header.top { padding: 40px 0 8px; }
+header.top { padding: 40px 0 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.lang { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-2); flex: none; }
+.lang a { padding: 4px 12px; border-radius: 999px; color: var(--ink-2); text-decoration: none; font-weight: 600; font-size: .9rem; }
+.lang a[aria-current="page"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .brand { display: flex; align-items: center; gap: 14px; }
 .logo { width: 52px; height: 52px; flex: none; }
 .logo .tr { fill: var(--surface-2); stroke: var(--line); stroke-width: 2.5; }
@@ -113,6 +118,10 @@ footer p { margin: 4px 0; }
   nav.toc { position: static; }
   article.doc { padding: 4px 18px 20px; }
 }
+@media (max-width: 560px) {
+  header.top { flex-direction: column-reverse; gap: 14px; padding-top: 20px; }
+  .lang { align-self: flex-end; }
+}
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
 </style>
 </head>
@@ -126,55 +135,59 @@ footer p { margin: 4px 0; }
       </svg>
       <div>
         <h1>Jigidi Automagic Solver</h1>
-        <p class="tag">Brukerskript som legger Jigidi-puslespill automatisk.</p>
+        <p class="tag">{{t.tag}}</p>
       </div>
     </div>
+    <nav class="lang" aria-label="{{t.langLabel}}">
+      <a href="./" hreflang="nb" lang="nb" data-lang="nb"{{CUR_NB}}>Norsk</a>
+      <a href="en.html" hreflang="en" lang="en" data-lang="en"{{CUR_EN}}>English</a>
+    </nav>
   </header>
 
   <main>
-    <section class="card install" aria-label="Installasjon">
+    <section class="card install" aria-label="{{t.installLabel}}">
       <div>
-        <p class="status" id="status" role="status">Sjekker installert versjon…</p>
+        <p class="status" id="status" role="status">{{t.checking}}</p>
         <div class="vrow">
-          <span>Nyeste versjon <b>{{VERSION}}</b></span>
-          <span>Installert <b id="installed">–</b></span>
+          <span>{{t.latest}} <b>{{VERSION}}</b></span>
+          <span>{{t.installed}} <b id="installed">–</b></span>
         </div>
       </div>
       <div class="actions">
-        <a class="btn primary" id="install" href="{{FILE}}">Installer</a>
-        <a class="btn ghost" href="{{PDF}}">Dokumentasjon (PDF)</a>
+        <a class="btn primary" id="install" href="{{FILE}}">{{t.install}}</a>
+        <a class="btn ghost" href="{{PDF}}">{{t.pdf}}</a>
       </div>
-      <p class="hint" id="hint">Krever en brukerskript-utvidelse (se under). Last siden på nytt etter installasjon for å se den installerte versjonen.</p>
+      <p class="hint" id="hint">{{t.hintStart}}</p>
     </section>
 
     <section class="start" aria-labelledby="start-h">
-      <h2 class="sec" id="start-h">Kom i gang</h2>
-      <div class="tabs" role="tablist" aria-label="Enhet">
-        <button role="tab" id="t-pc" aria-controls="p-pc" aria-selected="true">Datamaskin</button>
-        <button role="tab" id="t-ios" aria-controls="p-ios" aria-selected="false">iPad og iPhone</button>
+      <h2 class="sec" id="start-h">{{t.start}}</h2>
+      <div class="tabs" role="tablist" aria-label="{{t.device}}">
+        <button role="tab" id="t-pc" aria-controls="p-pc" aria-selected="true">{{t.pc}}</button>
+        <button role="tab" id="t-ios" aria-controls="p-ios" aria-selected="false">{{t.ios}}</button>
       </div>
       <div class="panel" id="p-pc" role="tabpanel" aria-labelledby="t-pc">
         <ol class="steps">
-          <li class="card"><h3>Installer en utvidelse</h3><p><b>Tampermonkey</b> eller <b>Violentmonkey</b> fra nettleserens utvidelsesbutikk.</p></li>
-          <li class="card"><h3>Installer skriptet</h3><p>Trykk <b>Installer</b> over og bekreft i dialogen som utvidelsen viser.</p></li>
-          <li class="card"><h3>Løs et puslespill</h3><p>Åpne et puslespill på jigidi.com og trykk <b>Solve</b> i panelet nede til venstre.</p></li>
+          <li class="card"><h3>{{t.pc1h}}</h3><p>{{t.pc1}}</p></li>
+          <li class="card"><h3>{{t.pc2h}}</h3><p>{{t.pc2}}</p></li>
+          <li class="card"><h3>{{t.pc3h}}</h3><p>{{t.pc3}}</p></li>
         </ol>
       </div>
       <div class="panel" id="p-ios" role="tabpanel" aria-labelledby="t-ios" hidden>
         <ol class="steps">
-          <li class="card"><h3>Installer Userscripts</h3><p>Gratis i App Store. Åpne appen og velg en mappe for skriptene. Slå på utvidelsen under <b>Innstillinger → Safari → Utvidelser</b> (nyere iPadOS: <b>Apper → Safari → Utvidelser</b>).</p></li>
-          <li class="card"><h3>Installer skriptet</h3><p>Trykk <b>Installer</b> over. Skriptet åpnes som tekst. Trykk på <code>&lt;/&gt;</code>-ikonet i adressefeltet og velg installer.</p></li>
-          <li class="card"><h3>Løs et puslespill</h3><p>Åpne et puslespill på jigidi.com, sjekk under <code>&lt;/&gt;</code> at skriptet er på, og trykk <b>Solve</b>.</p></li>
+          <li class="card"><h3>{{t.ios1h}}</h3><p>{{t.ios1}}</p></li>
+          <li class="card"><h3>{{t.ios2h}}</h3><p>{{t.ios2}}</p></li>
+          <li class="card"><h3>{{t.ios3h}}</h3><p>{{t.ios3}}</p></li>
         </ol>
       </div>
-      <p class="card update"><b>Oppdatering:</b> Tampermonkey og Violentmonkey oppdaterer skriptet automatisk fra GitHub. Vil du ha en ny versjon med en gang, eller bruker du iPad, åpner du denne siden og trykker <b>Oppdater</b> når den vises.</p>
+      <p class="card update">{{t.update}}</p>
     </section>
 
-    <section class="docs" aria-label="Dokumentasjon">
-      <nav class="toc" aria-label="Innhold">
-        <h2>Dokumentasjon</h2>
+    <section class="docs" aria-label="{{t.docs}}">
+      <nav class="toc" aria-label="{{t.contents}}">
+        <h2>{{t.docs}}</h2>
         <ol>{{TOC}}</ol>
-        <a class="btn ghost pdf" href="{{PDF}}">Last ned PDF</a>
+        <a class="btn ghost pdf" href="{{PDF}}">{{t.pdfDownload}}</a>
       </nav>
       <article class="card doc">
 {{DOCS}}
@@ -183,36 +196,43 @@ footer p { margin: 4px 0; }
   </main>
 
   <footer>
-    <p>Kildekode og feilmeldinger: <a href="{{REPO}}">{{REPO}}</a> · MIT-lisens · Basert på «Jigidi Auto Solver» av WorlockM.</p>
-    <p>Bruk av automatisering kan være i strid med Jigidis vilkår. Brukeren er selv ansvarlig.</p>
+    <p>{{t.foot1}}</p>
+    <p>{{t.foot2}}</p>
   </footer>
 </div>
 
 <script>
 (function () {
-  const LATEST = '{{VERSION}}';
+  const LATEST = '{{VERSION}}', LANG = '{{LANG}}';
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+  for (const a of document.querySelectorAll('.lang a')) a.addEventListener('click', () => store('jas-lang', a.dataset.lang));
+  if (LANG === 'nb' && !store('jas-lang')) {
+    const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+    if (!langs.some((l) => /^(nb|nn|no)\b/i.test(l))) { location.replace('en.html' + location.hash); return; }
+  }
   const $ = (id) => document.getElementById(id);
   const num = (v) => String(v).split('.').map((x) => parseInt(x, 10) || 0);
   const cmp = (a, b) => { const x = num(a), y = num(b); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
 
+  const T = {{JS}};
   let shown = false;
   function show(v) {
     shown = true;
     const st = $('status'), btn = $('install'), hint = $('hint');
-    $('installed').textContent = v || 'ikke funnet';
+    $('installed').textContent = v || T.notFound;
     if (!v) {
-      st.className = 'status'; st.textContent = 'Ikke funnet på denne enheten';
-      btn.textContent = 'Installer';
-      hint.textContent = 'Krever en brukerskript-utvidelse (se under). Er skriptet allerede installert, men utvidelsen ikke kjører det på denne siden, vises det som «ikke funnet».';
+      st.className = 'status'; st.textContent = T.stNone;
+      btn.textContent = T.install;
+      hint.textContent = T.hintNone;
     } else if (cmp(v, LATEST) < 0) {
-      st.className = 'status warn'; st.textContent = 'Ny versjon tilgjengelig';
-      btn.textContent = 'Oppdater til ' + LATEST;
-      hint.textContent = 'Trykk Oppdater og bekreft i utvidelsen. Last siden på nytt etterpå for å sjekke.';
+      st.className = 'status warn'; st.textContent = T.stNew;
+      btn.textContent = T.updateTo + ' ' + LATEST;
+      hint.textContent = T.hintNew;
     } else {
-      st.className = 'status ok'; st.textContent = cmp(v, LATEST) > 0 ? 'Nyere enn publisert versjon' : 'Oppdatert';
-      btn.textContent = 'Installer på nytt';
+      st.className = 'status ok'; st.textContent = cmp(v, LATEST) > 0 ? T.stNewer : T.stOk;
+      btn.textContent = T.reinstall;
       btn.classList.replace('primary', 'ghost');
-      hint.textContent = 'Du har nyeste versjon. Utvidelsen ser selv etter oppdateringer.';
+      hint.textContent = T.hintOk;
     }
   }
   const now = document.documentElement.getAttribute('data-jas-installed');

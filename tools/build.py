@@ -4,13 +4,15 @@
     python3 tools/build.py
 
 Writes (all relative to the repository root):
-    jigidi-automagic-solver.meta.js                 header only, for cheap update checks
-    docs/jigidi-automagic-solver-dokumentasjon.pdf  documentation (PDF)
-    index.html                                      install/update page with the documentation
+    jigidi-automagic-solver.meta.js                   header only, for cheap update checks
+    docs/jigidi-automagic-solver-dokumentasjon.pdf    documentation, Norwegian (PDF)
+    docs/jigidi-automagic-solver-documentation.pdf    documentation, English (PDF)
+    index.html / en.html                              install/update page with the documentation (nb / en)
 
 Needs: Python 3, reportlab (pip install reportlab), DejaVu fonts.
 """
 import html
+import json
 import os
 import re
 import sys
@@ -18,14 +20,89 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, 'tools'))
 import docs_content  # noqa: E402
+import docs_content_en  # noqa: E402
 
 SCRIPT = os.path.join(ROOT, docs_content.FILE)
 META = os.path.join(ROOT, 'jigidi-automagic-solver.meta.js')
-PDF = os.path.join(ROOT, 'docs', 'jigidi-automagic-solver-dokumentasjon.pdf')
-PDF_REL = 'docs/jigidi-automagic-solver-dokumentasjon.pdf'
 IMAGE_REL = 'docs/panel.png'
 TEMPLATE = os.path.join(ROOT, 'tools', 'site_template.html')
-INDEX = os.path.join(ROOT, 'index.html')
+REPO_LINK = f'<a href="{docs_content.REPO}">{docs_content.REPO}</a>'
+
+# Per language: documentation source, output files and the page's own text.
+LANGS = {
+    'nb': {
+        'content': docs_content, 'page': 'index.html', 'pdf': 'docs/jigidi-automagic-solver-dokumentasjon.pdf',
+        'pdf_title': 'Jigidi Automagic Solver – dokumentasjon', 'pdf_sub': 'Brukerveiledning og teknisk dokumentasjon',
+        'pdf_foot': 'dokumentasjon', 'pdf_page': 'Side', 'pdf_lang': 'nb-NO',
+        'img_alt': 'Kontrollpanelet i tilstandene laster, klar, løser, ferdig og minimert',
+        't': {
+            'meta': 'Brukerskript som legger Jigidi-puslespill automatisk. Installer, oppdater og les dokumentasjonen.',
+            'tag': 'Brukerskript som legger Jigidi-puslespill automatisk.', 'langLabel': 'Språk',
+            'installLabel': 'Installasjon', 'checking': 'Sjekker installert versjon…',
+            'latest': 'Nyeste versjon', 'installed': 'Installert', 'install': 'Installer', 'pdf': 'Dokumentasjon (PDF)',
+            'hintStart': 'Krever en brukerskript-utvidelse (se under). Last siden på nytt etter installasjon for å se den installerte versjonen.',
+            'start': 'Kom i gang', 'device': 'Enhet', 'pc': 'Datamaskin', 'ios': 'iPad og iPhone',
+            'pc1h': 'Installer en utvidelse', 'pc1': '<b>Tampermonkey</b> eller <b>Violentmonkey</b> fra nettleserens utvidelsesbutikk.',
+            'pc2h': 'Installer skriptet', 'pc2': 'Trykk <b>Installer</b> over og bekreft i dialogen som utvidelsen viser.',
+            'pc3h': 'Løs et puslespill', 'pc3': 'Åpne et puslespill på jigidi.com og trykk <b>Solve</b> i panelet nede til venstre.',
+            'ios1h': 'Installer Userscripts', 'ios1': 'Gratis i App Store. Åpne appen og velg en mappe for skriptene. Slå på utvidelsen under '
+                     '<b>Innstillinger → Safari → Utvidelser</b> (nyere iPadOS: <b>Apper → Safari → Utvidelser</b>).',
+            'ios2h': 'Installer skriptet', 'ios2': 'Trykk <b>Installer</b> over. Skriptet åpnes som tekst. Trykk på <code>&lt;/&gt;</code>-ikonet '
+                     'i adressefeltet og velg installer.',
+            'ios3h': 'Løs et puslespill', 'ios3': 'Åpne et puslespill på jigidi.com, sjekk under <code>&lt;/&gt;</code> at skriptet er på, og trykk <b>Solve</b>.',
+            'update': '<b>Oppdatering:</b> Tampermonkey og Violentmonkey oppdaterer skriptet automatisk fra GitHub. Vil du ha en ny versjon '
+                      'med en gang, eller bruker du iPad, åpner du denne siden og trykker <b>Oppdater</b> når den vises.',
+            'docs': 'Dokumentasjon', 'contents': 'Innhold', 'pdfDownload': 'Last ned PDF',
+            'foot1': f'Kildekode og feilmeldinger: {REPO_LINK} · MIT-lisens · Basert på «Jigidi Auto Solver» av WorlockM.',
+            'foot2': 'Bruk av automatisering kan være i strid med Jigidis vilkår. Brukeren er selv ansvarlig.',
+        },
+        'js': {
+            'notFound': 'ikke funnet', 'install': 'Installer', 'updateTo': 'Oppdater til', 'reinstall': 'Installer på nytt',
+            'stNone': 'Ikke funnet på denne enheten', 'stNew': 'Ny versjon tilgjengelig', 'stOk': 'Oppdatert',
+            'stNewer': 'Nyere enn publisert versjon',
+            'hintNone': 'Krever en brukerskript-utvidelse (se under). Er skriptet allerede installert, men utvidelsen ikke kjører det '
+                        'på denne siden, vises det som «ikke funnet».',
+            'hintNew': 'Trykk Oppdater og bekreft i utvidelsen. Last siden på nytt etterpå for å sjekke.',
+            'hintOk': 'Du har nyeste versjon. Utvidelsen ser selv etter oppdateringer.',
+        },
+    },
+    'en': {
+        'content': docs_content_en, 'page': 'en.html', 'pdf': 'docs/jigidi-automagic-solver-documentation.pdf',
+        'pdf_title': 'Jigidi Automagic Solver – documentation', 'pdf_sub': 'User guide and technical documentation',
+        'pdf_foot': 'documentation', 'pdf_page': 'Page', 'pdf_lang': 'en',
+        'img_alt': 'The control panel in its loading, ready, solving, done and minimised states',
+        't': {
+            'meta': 'A userscript that solves Jigidi jigsaw puzzles automatically. Install, update and read the documentation.',
+            'tag': 'A userscript that solves Jigidi jigsaw puzzles automatically.', 'langLabel': 'Language',
+            'installLabel': 'Installation', 'checking': 'Checking installed version…',
+            'latest': 'Latest version', 'installed': 'Installed', 'install': 'Install', 'pdf': 'Documentation (PDF)',
+            'hintStart': 'Needs a userscript extension (see below). Reload the page after installing to see the installed version.',
+            'start': 'Get started', 'device': 'Device', 'pc': 'Computer', 'ios': 'iPad and iPhone',
+            'pc1h': 'Install an extension', 'pc1': "<b>Tampermonkey</b> or <b>Violentmonkey</b> from your browser's extension store.",
+            'pc2h': 'Install the script', 'pc2': 'Press <b>Install</b> above and confirm in the dialog the extension shows.',
+            'pc3h': 'Solve a puzzle', 'pc3': 'Open a puzzle on jigidi.com and press <b>Solve</b> in the panel at the bottom left.',
+            'ios1h': 'Install Userscripts', 'ios1': 'Free on the App Store. Open the app and choose a folder for the scripts. Turn on the extension under '
+                     '<b>Settings → Safari → Extensions</b> (newer iPadOS: <b>Apps → Safari → Extensions</b>).',
+            'ios2h': 'Install the script', 'ios2': 'Press <b>Install</b> above. The script opens as text. Tap the <code>&lt;/&gt;</code> icon '
+                     'in the address bar and choose install.',
+            'ios3h': 'Solve a puzzle', 'ios3': 'Open a puzzle on jigidi.com, check under <code>&lt;/&gt;</code> that the script is on, and press <b>Solve</b>.',
+            'update': '<b>Updating:</b> Tampermonkey and Violentmonkey update the script automatically from GitHub. If you want a new version '
+                      'right away, or you use an iPad, open this page and press <b>Update</b> when it appears.',
+            'docs': 'Documentation', 'contents': 'Contents', 'pdfDownload': 'Download PDF',
+            'foot1': f'Source code and issues: {REPO_LINK} · MIT licence · Based on "Jigidi Auto Solver" by WorlockM.',
+            'foot2': "Using automation may be against Jigidi's terms. You are responsible for your own use.",
+        },
+        'js': {
+            'notFound': 'not found', 'install': 'Install', 'updateTo': 'Update to', 'reinstall': 'Reinstall',
+            'stNone': 'Not found on this device', 'stNew': 'New version available', 'stOk': 'Up to date',
+            'stNewer': 'Newer than the published version',
+            'hintNone': "Needs a userscript extension (see below). If the script is already installed but the extension doesn't run it "
+                        'on this page, it shows as "not found".',
+            'hintNew': 'Press Update and confirm in the extension. Reload the page afterwards to check.',
+            'hintOk': 'You have the latest version. The extension checks for updates by itself.',
+        },
+    },
+}
 
 
 def read_script():
@@ -40,8 +117,8 @@ def read_script():
 
 # ---------------------------------------------------------------- HTML renderer
 class HtmlKit:
-    def __init__(self):
-        self.out, self.toc, self.n = [], [], 0
+    def __init__(self, img_alt):
+        self.out, self.toc, self.n, self.img_alt = [], [], 0, img_alt
 
     @staticmethod
     def c(t):
@@ -79,22 +156,32 @@ class HtmlKit:
 
     def image(self, path, width_mm, aspect):
         self.out.append(f'<img class="shot" src="{path}" width="360" height="{round(360 * aspect)}" '
-                        'alt="Kontrollpanelet i tilstandene laster, klar, løser, ferdig og minimert" loading="lazy">')
+                        f'alt="{self.img_alt}" loading="lazy">')
 
 
-def build_html(version):
-    k = HtmlKit()
-    docs_content.build(k, version, IMAGE_REL)
+def build_html(version, lang):
+    L = LANGS[lang]
+    k = HtmlKit(L['img_alt'])
+    L['content'].build(k, version, IMAGE_REL)
     toc = ''.join(f'<li><a href="#{sid}">{html.escape(t)}</a></li>' for sid, t in k.toc)
     page = open(TEMPLATE, encoding='utf-8').read()
-    for key, val in {'{{VERSION}}': version, '{{FILE}}': docs_content.FILE, '{{PDF}}': PDF_REL,
-                     '{{REPO}}': docs_content.REPO, '{{TOC}}': toc, '{{DOCS}}': '\n'.join(k.out)}.items():
+    for key, val in L['t'].items():
+        page = page.replace('{{t.' + key + '}}', val)
+    cur = ' aria-current="page"'
+    for key, val in {'{{VERSION}}': version, '{{LANG}}': lang, '{{FILE}}': docs_content.FILE, '{{PDF}}': L['pdf'],
+                     '{{REPO}}': docs_content.REPO, '{{TOC}}': toc, '{{DOCS}}': '\n'.join(k.out),
+                     '{{CUR_NB}}': cur if lang == 'nb' else '', '{{CUR_EN}}': cur if lang == 'en' else '',
+                     '{{JS}}': json.dumps(L['js'], ensure_ascii=False)}.items():
         page = page.replace(key, val)
-    open(INDEX, 'w', encoding='utf-8').write(page)
+    left = re.findall(r'\{\{[^}]+\}\}', page)
+    if left:
+        sys.exit(f'Unfilled placeholders in {L["page"]}: {sorted(set(left))}')
+    open(os.path.join(ROOT, L['page']), 'w', encoding='utf-8').write(page)
 
 
 # ---------------------------------------------------------------- PDF renderer
-def build_pdf(version):
+def build_pdf(version, lang):
+    L = LANGS[lang]
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import mm
     from reportlab.lib import colors
@@ -160,28 +247,30 @@ def build_pdf(version):
             self.s += [Image(os.path.join(ROOT, path), width=width_mm * mm, height=width_mm * mm * aspect), Spacer(1, 4)]
 
     k = PdfKit()
+    ver = 'versjon' if lang == 'nb' else 'version'
     k.s += [Paragraph('Jigidi Automagic Solver', title),
-            Paragraph(f'Brukerveiledning og teknisk dokumentasjon · versjon {version}', sub)]
-    docs_content.build(k, version, IMAGE_REL)
+            Paragraph(f'{L["pdf_sub"]} · {ver} {version}', sub)]
+    L['content'].build(k, version, IMAGE_REL)
 
     def footer(cv, doc):
         cv.saveState(); cv.setFont('S', 8); cv.setFillColor(MUTE)
-        cv.drawString(20 * mm, 12 * mm, f'Jigidi Automagic Solver {version} – dokumentasjon')
-        cv.drawRightString(190 * mm, 12 * mm, f'Side {doc.page}')
+        cv.drawString(20 * mm, 12 * mm, f'Jigidi Automagic Solver {version} – {L["pdf_foot"]}')
+        cv.drawRightString(190 * mm, 12 * mm, f'{L["pdf_page"]} {doc.page}')
         cv.setStrokeColor(LINE); cv.line(20 * mm, 16 * mm, 190 * mm, 16 * mm); cv.restoreState()
 
-    doc = SimpleDocTemplate(PDF, pagesize=A4, leftMargin=20 * mm, rightMargin=20 * mm, topMargin=18 * mm,
-                            bottomMargin=22 * mm, title='Jigidi Automagic Solver – dokumentasjon', author='Knut Olav Sunde',
-                            subject=f'Brukerveiledning og teknisk dokumentasjon, versjon {version}', lang='nb-NO')
+    doc = SimpleDocTemplate(os.path.join(ROOT, L['pdf']), pagesize=A4, leftMargin=20 * mm, rightMargin=20 * mm, topMargin=18 * mm,
+                            bottomMargin=22 * mm, title=L['pdf_title'], author='Knut Olav Sunde',
+                            subject=f'{L["pdf_sub"]}, {ver} {version}', lang=L['pdf_lang'])
     doc.build(k.s, onFirstPage=footer, onLaterPages=footer)
 
 
 def main():
     header, version = read_script()
     open(META, 'w', encoding='utf-8').write(header)
-    build_pdf(version)
-    build_html(version)
-    print(f'Built version {version}: meta.js, PDF, index.html')
+    for lang in LANGS:
+        build_pdf(version, lang)
+        build_html(version, lang)
+    print(f'Built version {version}: meta.js, ' + ', '.join(f'{L["page"]} + PDF ({lang})' for lang, L in LANGS.items()))
 
 
 if __name__ == '__main__':

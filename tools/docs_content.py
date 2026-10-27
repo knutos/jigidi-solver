@@ -261,7 +261,7 @@ def build(K, version, image_path):
     K.h2('Versjon 1.8.1')
     K.bullets([
         f'Nytt hjem: {REPO}. Automatiske oppdateringer kommer nå derfra.',
-        f'Ny installasjonsside ({SITE}) med installer-/oppdater-knapp, versjonssjekk og dokumentasjon.',
+        f'Ny installasjonsside ({SITE}) med installer-/oppdater-knapp, versjonssjekk og dokumentasjon, på norsk og engelsk.',
         'Skriptet melder fra om installert versjon på installasjonssiden, og gjør ingenting annet der.',
         'Dokumentasjonen bygges fra én kilde til både PDF og nettside.',
     ])
