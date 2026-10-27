@@ -69,7 +69,7 @@ h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.15; margin: 0; letter
 /* getting started */
 section.start { margin: 36px 0 0; }
 h2.sec { font-size: 1.35rem; margin: 0 0 12px; }
-.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); margin-bottom: 14px; }
+.tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); margin-bottom: 14px; }
 .tabs button { border: 0; background: transparent; color: var(--ink-2); font: inherit; font-weight: 600; padding: 6px 16px; border-radius: 999px; cursor: pointer; min-height: 36px; }
 .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -78,6 +78,7 @@ h2.sec { font-size: 1.35rem; margin: 0 0 12px; }
 .steps h3 { margin: 0 0 4px; font-size: 1rem; }
 .steps p { margin: 0; color: var(--ink-2); font-size: .95rem; }
 .panel[hidden] { display: none; }
+.pnote { margin: 10px 4px 0; color: var(--ink-2); font-size: .92rem; }
 .update { margin: 14px 0 0; padding: 16px 18px; color: var(--ink-2); font-size: .95rem; }
 .update b { color: var(--ink); }
 
@@ -165,6 +166,7 @@ footer p { margin: 4px 0; }
       <div class="tabs" role="tablist" aria-label="Enhet">
         <button role="tab" id="t-pc" aria-controls="p-pc" aria-selected="true">Datamaskin</button>
         <button role="tab" id="t-ios" aria-controls="p-ios" aria-selected="false">iPad og iPhone</button>
+        <button role="tab" id="t-and" aria-controls="p-and" aria-selected="false">Android</button>
       </div>
       <div class="panel" id="p-pc" role="tabpanel" aria-labelledby="t-pc">
         <ol class="steps">
@@ -179,6 +181,14 @@ footer p { margin: 4px 0; }
           <li class="card"><h3>Installer skriptet</h3><p>Trykk <b>Installer</b> over. Skriptet åpnes som tekst. Trykk på <code>&lt;/&gt;</code>-ikonet i adressefeltet og velg installer.</p></li>
           <li class="card"><h3>Løs et puslespill</h3><p>Åpne et puslespill på jigidi.com, sjekk under <code>&lt;/&gt;</code> at skriptet er på, og trykk <b>Solve</b>.</p></li>
         </ol>
+      </div>
+      <div class="panel" id="p-and" role="tabpanel" aria-labelledby="t-and" hidden>
+        <ol class="steps">
+          <li class="card"><h3>Installer Firefox og Violentmonkey</h3><p>Installer <b>Firefox</b> fra Google Play. I Firefox: meny (⋮) → <b>Utvidelser</b> → finn <b>Violentmonkey</b> og trykk <b>Legg til</b>.</p></li>
+          <li class="card"><h3>Installer skriptet</h3><p>Åpne denne siden i Firefox og trykk <b>Installer</b> over. Violentmonkey viser skriptet; trykk <b>Installer</b> / <b>Bekreft</b>.</p></li>
+          <li class="card"><h3>Løs et puslespill</h3><p>Åpne et puslespill på jigidi.com i Firefox og trykk <b>Solve</b> i panelet nede til venstre.</p></li>
+        </ol>
+        <p class="pnote">Chrome for Android støtter ikke utvidelser. <b>Microsoft Edge</b> for Android har Tampermonkey i sin utvidelsesliste og kan brukes i stedet. Android er ikke testet ennå – si gjerne fra om det virker.</p>
       </div>
       <p class="card update"><b>Oppdatering:</b> Tampermonkey og Violentmonkey oppdaterer skriptet automatisk fra GitHub. Vil du ha en ny versjon med en gang, eller bruker du iPad, åpner du denne siden og trykker <b>Oppdater</b> når den vises.</p>
     </section>
@@ -204,6 +214,10 @@ footer p { margin: 4px 0; }
 <p>Safari på iPad og iPhone kan kjøre brukerskript med appen <b>Userscripts</b> (gratis i App Store). <b>Tampermonkey</b> finnes også for Safari, og fungerer på samme måte som på datamaskin.</p>
 <ul><li>Installer <b>Userscripts</b> fra App Store og åpne appen én gang. Velg en mappe der skriptene skal ligge (f.eks. en mappe «Userscripts» i iCloud Drive).</li><li>Slå på utvidelsen: <b>Innstillinger → Safari → Utvidelser → Userscripts</b> (på nyere iPadOS: <b>Innstillinger → Apper → Safari → Utvidelser</b>). Gi den tilgang til jigidi.com, eller til alle nettsteder.</li><li>Åpne installasjonssiden i Safari og trykk <b>Installer</b>. Skriptet åpnes som tekst. Trykk på <code>&lt;/&gt;</code>-ikonet i adressefeltet og velg installer.</li><li>Åpne et puslespill på jigidi.com. Trykk på <code>&lt;/&gt;</code>-ikonet og sjekk at <b>Jigidi Automagic Solver</b> er slått på.</li></ul>
 <p>For å oppdatere på iPad: åpne installasjonssiden og installer på nytt på samme måte. Panelet brukes som på datamaskin: trykk <b>Solve</b>, trykk <b>Stop</b> for å avbryte (Esc finnes bare med tastatur), dra panelet med fingeren, og trykk på ringen for å minimere.</p>
+<h3>2.3 Android</h3>
+<p>Chrome for Android støtter ikke utvidelser. Bruk <b>Firefox</b> med <b>Violentmonkey</b>, eller <b>Microsoft Edge</b> med Tampermonkey. <i>Android er ikke testet ennå.</i></p>
+<ul><li>Installer <b>Firefox</b> fra Google Play.</li><li>I Firefox: meny (⋮) → <b>Utvidelser</b> → finn <b>Violentmonkey</b> og trykk <b>Legg til</b>. Tampermonkey finnes også for Firefox på Android.</li><li>Åpne installasjonssiden i Firefox og trykk <b>Installer</b>. Violentmonkey viser skriptet; trykk <b>Installer</b> / <b>Bekreft</b>.</li><li>Åpne et puslespill på jigidi.com i Firefox og trykk <b>Solve</b>.</li></ul>
+<p>Med <b>Edge</b>: meny → <b>Utvidelser</b> → legg til <b>Tampermonkey</b>, og installer deretter skriptet fra installasjonssiden på samme måte. Panelet brukes som på iPad: dra det med fingeren, trykk på ringen for å minimere, og trykk <b>Stop</b> for å avbryte. Violentmonkey og Tampermonkey oppdaterer skriptet automatisk, som på datamaskin.</p>
 <h2 id="d3">3. Bruk</h2>
 <p>Kontrollpanelet er en liten mørk «pille» nede i venstre hjørne. Til venstre er en ring som viser fremdriften, i midten status, og til høyre en knapp. Bildet viser panelet i de ulike tilstandene:</p>
 <img class="shot" src="docs/panel.png" width="360" height="400" alt="Kontrollpanelet i tilstandene laster, klar, løser, ferdig og minimert" loading="lazy">
@@ -253,7 +267,7 @@ footer p { margin: 4px 0; }
 <ul><li><b>Rotasjon:</b> Puslespill med roterte brikker støttes ikke.</li><li><b>Avhengig av Jigidis oppbygning:</b> Skriptet forutsetter at brikkene klippes i fasit-rekkefølge med 2D-canvas, at det finnes en zoomknapp («−») og at dimensjonene står som «(k × r)» på siden. Endrer Jigidi noe av dette, slutter skriptet å virke til det oppdateres.</li><li><b>WebGL / Web Workers:</b> Tegner Jigidi med WebGL eller OffscreenCanvas i en worker, ser krokene ingenting.</li><li><b>Oppdagelse:</b> Svært jevne, rettlinjede og raske drag skiller seg tydelig fra menneskelig bruk. Dersom Jigidi logger tidsbruk eller bevegelsesmønster på serveren, kan løsninger fra skriptet oppdages. Høyere hastighet gjør dette signalet tydeligere.</li><li><b>Bruksvilkår:</b> Bruk av automatisering kan være i strid med Jigidis vilkår. Brukeren er selv ansvarlig.</li></ul>
 <h2 id="d9">9. Endringslogg</h2>
 <h3>Versjon 1.8.1</h3>
-<ul><li>Nytt hjem: https://github.com/knutos/jigidi-solver. Automatiske oppdateringer kommer nå derfra.</li><li>Ny installasjonsside (https://knutos.github.io/jigidi-solver/) med installer-/oppdater-knapp, versjonssjekk og dokumentasjon, på norsk og engelsk.</li><li>Skriptet melder fra om installert versjon på installasjonssiden, og gjør ingenting annet der.</li><li>Dokumentasjonen bygges fra én kilde til både PDF og nettside.</li></ul>
+<ul><li>Nytt hjem: https://github.com/knutos/jigidi-solver. Automatiske oppdateringer kommer nå derfra.</li><li>Ny installasjonsside (https://knutos.github.io/jigidi-solver/) med installer-/oppdater-knapp, versjonssjekk og dokumentasjon, på norsk og engelsk.</li><li>Skriptet melder fra om installert versjon på installasjonssiden, og gjør ingenting annet der.</li><li>Dokumentasjonen bygges fra én kilde til både PDF og nettside.</li><li>Installasjonsveiledning for Android (Firefox med Violentmonkey, eller Edge med Tampermonkey). Ikke testet på Android ennå.</li></ul>
 <h3>Versjon 1.8.0</h3>
 <ul><li>Rettet: store puslespill stoppet midtveis. Zoom virket ikke på nyere Jigidi, så det ferdige puslespillet fikk ikke plass, og brikker skulle legges utenfor brettet.</li><li>Zoomknappen finnes nå også uten kjent id, og trykkes med vanlige nettleserhendelser når lytterne er ukjente.</li><li>Fjernet musehjul som zoom-reserve; det kunne flytte hele brettet.</li><li>Sjekker før start at puslespillet får plass, og gir en tydelig melding hvis ikke.</li><li>Bygger videre på en allerede sammensatt del, og flytter den inn på brettet om nødvendig (etter å ha ryddet plassen).</li><li>Testet på iPad med Safari, og på kopi av spillet med 594 brikker (27 × 22) som må zoomes ut: ferdig på ca. 7 sekunder.</li></ul>
 <h3>Versjon 1.7.2</h3>
@@ -321,7 +335,7 @@ footer p { margin: 4px 0; }
     setTimeout(() => { const v = document.documentElement.getAttribute('data-jas-installed'); if (!shown) show(v); }, 1200);
   }
 
-  // Tabs; open the iPad/iPhone tab on Apple touch devices.
+  // Tabs; open the matching tab on Android and on Apple touch devices.
   const tabs = [...document.querySelectorAll('[role=tab]')];
   function select(t) {
     for (const x of tabs) { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; $(x.getAttribute('aria-controls')).hidden = !on; }
@@ -332,8 +346,9 @@ footer p { margin: 4px 0; }
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; select(n); n.focus(); }
     });
   });
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  select(ios ? $('t-ios') : $('t-pc'));
+  const ua = navigator.userAgent;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  select(/Android/i.test(ua) ? $('t-and') : ios ? $('t-ios') : $('t-pc'));
 })();
 </script>
 </body>

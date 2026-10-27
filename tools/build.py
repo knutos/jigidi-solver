@@ -50,6 +50,13 @@ LANGS = {
             'ios2h': 'Installer skriptet', 'ios2': 'Trykk <b>Installer</b> over. Skriptet åpnes som tekst. Trykk på <code>&lt;/&gt;</code>-ikonet '
                      'i adressefeltet og velg installer.',
             'ios3h': 'Løs et puslespill', 'ios3': 'Åpne et puslespill på jigidi.com, sjekk under <code>&lt;/&gt;</code> at skriptet er på, og trykk <b>Solve</b>.',
+            'and1h': 'Installer Firefox og Violentmonkey', 'and1': 'Installer <b>Firefox</b> fra Google Play. I Firefox: meny (⋮) → '
+                     '<b>Utvidelser</b> → finn <b>Violentmonkey</b> og trykk <b>Legg til</b>.',
+            'and2h': 'Installer skriptet', 'and2': 'Åpne denne siden i Firefox og trykk <b>Installer</b> over. Violentmonkey viser skriptet; '
+                     'trykk <b>Installer</b> / <b>Bekreft</b>.',
+            'and3h': 'Løs et puslespill', 'and3': 'Åpne et puslespill på jigidi.com i Firefox og trykk <b>Solve</b> i panelet nede til venstre.',
+            'andNote': 'Chrome for Android støtter ikke utvidelser. <b>Microsoft Edge</b> for Android har Tampermonkey i sin utvidelsesliste '
+                       'og kan brukes i stedet. Android er ikke testet ennå – si gjerne fra om det virker.',
             'update': '<b>Oppdatering:</b> Tampermonkey og Violentmonkey oppdaterer skriptet automatisk fra GitHub. Vil du ha en ny versjon '
                       'med en gang, eller bruker du iPad, åpner du denne siden og trykker <b>Oppdater</b> når den vises.',
             'docs': 'Dokumentasjon', 'contents': 'Innhold', 'pdfDownload': 'Last ned PDF',
@@ -86,6 +93,13 @@ LANGS = {
             'ios2h': 'Install the script', 'ios2': 'Press <b>Install</b> above. The script opens as text. Tap the <code>&lt;/&gt;</code> icon '
                      'in the address bar and choose install.',
             'ios3h': 'Solve a puzzle', 'ios3': 'Open a puzzle on jigidi.com, check under <code>&lt;/&gt;</code> that the script is on, and press <b>Solve</b>.',
+            'and1h': 'Install Firefox and Violentmonkey', 'and1': 'Install <b>Firefox</b> from Google Play. In Firefox: menu (⋮) → '
+                     '<b>Extensions</b> → find <b>Violentmonkey</b> and tap <b>Add</b>.',
+            'and2h': 'Install the script', 'and2': 'Open this page in Firefox and press <b>Install</b> above. Violentmonkey shows the script; '
+                     'tap <b>Install</b> / <b>Confirm</b>.',
+            'and3h': 'Solve a puzzle', 'and3': 'Open a puzzle on jigidi.com in Firefox and press <b>Solve</b> in the panel at the bottom left.',
+            'andNote': 'Chrome for Android does not support extensions. <b>Microsoft Edge</b> for Android has Tampermonkey in its extension list '
+                       'and can be used instead. Android has not been tested yet – please report whether it works.',
             'update': '<b>Updating:</b> Tampermonkey and Violentmonkey update the script automatically from GitHub. If you want a new version '
                       'right away, or you use an iPad, open this page and press <b>Update</b> when it appears.',
             'docs': 'Documentation', 'contents': 'Contents', 'pdfDownload': 'Download PDF',

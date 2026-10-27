@@ -69,7 +69,7 @@ h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.15; margin: 0; letter
 /* getting started */
 section.start { margin: 36px 0 0; }
 h2.sec { font-size: 1.35rem; margin: 0 0 12px; }
-.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); margin-bottom: 14px; }
+.tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); margin-bottom: 14px; }
 .tabs button { border: 0; background: transparent; color: var(--ink-2); font: inherit; font-weight: 600; padding: 6px 16px; border-radius: 999px; cursor: pointer; min-height: 36px; }
 .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -78,6 +78,7 @@ h2.sec { font-size: 1.35rem; margin: 0 0 12px; }
 .steps h3 { margin: 0 0 4px; font-size: 1rem; }
 .steps p { margin: 0; color: var(--ink-2); font-size: .95rem; }
 .panel[hidden] { display: none; }
+.pnote { margin: 10px 4px 0; color: var(--ink-2); font-size: .92rem; }
 .update { margin: 14px 0 0; padding: 16px 18px; color: var(--ink-2); font-size: .95rem; }
 .update b { color: var(--ink); }
 
@@ -165,6 +166,7 @@ footer p { margin: 4px 0; }
       <div class="tabs" role="tablist" aria-label="Device">
         <button role="tab" id="t-pc" aria-controls="p-pc" aria-selected="true">Computer</button>
         <button role="tab" id="t-ios" aria-controls="p-ios" aria-selected="false">iPad and iPhone</button>
+        <button role="tab" id="t-and" aria-controls="p-and" aria-selected="false">Android</button>
       </div>
       <div class="panel" id="p-pc" role="tabpanel" aria-labelledby="t-pc">
         <ol class="steps">
@@ -179,6 +181,14 @@ footer p { margin: 4px 0; }
           <li class="card"><h3>Install the script</h3><p>Press <b>Install</b> above. The script opens as text. Tap the <code>&lt;/&gt;</code> icon in the address bar and choose install.</p></li>
           <li class="card"><h3>Solve a puzzle</h3><p>Open a puzzle on jigidi.com, check under <code>&lt;/&gt;</code> that the script is on, and press <b>Solve</b>.</p></li>
         </ol>
+      </div>
+      <div class="panel" id="p-and" role="tabpanel" aria-labelledby="t-and" hidden>
+        <ol class="steps">
+          <li class="card"><h3>Install Firefox and Violentmonkey</h3><p>Install <b>Firefox</b> from Google Play. In Firefox: menu (⋮) → <b>Extensions</b> → find <b>Violentmonkey</b> and tap <b>Add</b>.</p></li>
+          <li class="card"><h3>Install the script</h3><p>Open this page in Firefox and press <b>Install</b> above. Violentmonkey shows the script; tap <b>Install</b> / <b>Confirm</b>.</p></li>
+          <li class="card"><h3>Solve a puzzle</h3><p>Open a puzzle on jigidi.com in Firefox and press <b>Solve</b> in the panel at the bottom left.</p></li>
+        </ol>
+        <p class="pnote">Chrome for Android does not support extensions. <b>Microsoft Edge</b> for Android has Tampermonkey in its extension list and can be used instead. Android has not been tested yet – please report whether it works.</p>
       </div>
       <p class="card update"><b>Updating:</b> Tampermonkey and Violentmonkey update the script automatically from GitHub. If you want a new version right away, or you use an iPad, open this page and press <b>Update</b> when it appears.</p>
     </section>
@@ -204,6 +214,10 @@ footer p { margin: 4px 0; }
 <p>Safari on iPad and iPhone can run userscripts with the <b>Userscripts</b> app (free on the App Store). <b>Tampermonkey</b> is also available for Safari and works the same way as on a computer.</p>
 <ul><li>Install <b>Userscripts</b> from the App Store and open the app once. Choose a folder for the scripts (e.g. a folder called "Userscripts" in iCloud Drive).</li><li>Turn on the extension: <b>Settings → Safari → Extensions → Userscripts</b> (on newer iPadOS: <b>Settings → Apps → Safari → Extensions</b>). Give it access to jigidi.com, or to all websites.</li><li>Open the install page in Safari and press <b>Install</b>. The script opens as text. Tap the <code>&lt;/&gt;</code> icon in the address bar and choose install.</li><li>Open a puzzle on jigidi.com. Tap the <code>&lt;/&gt;</code> icon and check that <b>Jigidi Automagic Solver</b> is turned on.</li></ul>
 <p>To update on iPad: open the install page and install again the same way. The panel works as on a computer: press <b>Solve</b>, press <b>Stop</b> to cancel (Esc only works with a keyboard), drag the panel with your finger, and tap the ring to minimise it.</p>
+<h3>2.3 Android</h3>
+<p>Chrome for Android does not support extensions. Use <b>Firefox</b> with <b>Violentmonkey</b>, or <b>Microsoft Edge</b> with Tampermonkey. <i>Android has not been tested yet.</i></p>
+<ul><li>Install <b>Firefox</b> from Google Play.</li><li>In Firefox: menu (⋮) → <b>Extensions</b> → find <b>Violentmonkey</b> and tap <b>Add</b>. Tampermonkey is also available for Firefox on Android.</li><li>Open the install page in Firefox and press <b>Install</b>. Violentmonkey shows the script; tap <b>Install</b> / <b>Confirm</b>.</li><li>Open a puzzle on jigidi.com in Firefox and press <b>Solve</b>.</li></ul>
+<p>With <b>Edge</b>: menu → <b>Extensions</b> → add <b>Tampermonkey</b>, then install the script from the install page the same way. The panel works as on iPad: drag it with your finger, tap the ring to minimise it, and press <b>Stop</b> to cancel. Violentmonkey and Tampermonkey update the script automatically, as on a computer.</p>
 <h2 id="d3">3. Usage</h2>
 <p>The control panel is a small dark "pill" in the bottom-left corner. On the left is a ring that shows progress, in the middle the status, and on the right a button. The picture shows the panel in its different states:</p>
 <img class="shot" src="docs/panel.png" width="360" height="400" alt="The control panel in its loading, ready, solving, done and minimised states" loading="lazy">
@@ -253,7 +267,7 @@ footer p { margin: 4px 0; }
 <ul><li><b>Rotation:</b> Puzzles with rotated pieces are not supported.</li><li><b>Depends on how Jigidi is built:</b> The script assumes that pieces are cut in solution order on a 2D canvas, that there is a zoom button ("−") and that the dimensions appear as "(c × r)" on the page. If Jigidi changes any of this, the script stops working until it is updated.</li><li><b>WebGL / Web Workers:</b> If Jigidi draws with WebGL or OffscreenCanvas in a worker, the hooks see nothing.</li><li><b>Detection:</b> Very even, straight and fast drags are clearly different from human use. If Jigidi logs timing or movement patterns on the server, solves by the script can be detected. Higher speed makes this signal clearer.</li><li><b>Terms of use:</b> Using automation may be against Jigidi's terms. You are responsible for your own use.</li></ul>
 <h2 id="d9">9. Changelog</h2>
 <h3>Version 1.8.1</h3>
-<ul><li>New home: https://github.com/knutos/jigidi-solver. Automatic updates now come from there.</li><li>New install page (https://knutos.github.io/jigidi-solver/) with an install/update button, version check and documentation, in Norwegian and English.</li><li>The script reports the installed version on the install page, and does nothing else there.</li><li>The documentation is built from one source into both PDF and web page.</li></ul>
+<ul><li>New home: https://github.com/knutos/jigidi-solver. Automatic updates now come from there.</li><li>New install page (https://knutos.github.io/jigidi-solver/) with an install/update button, version check and documentation, in Norwegian and English.</li><li>The script reports the installed version on the install page, and does nothing else there.</li><li>The documentation is built from one source into both PDF and web page.</li><li>Install guide for Android (Firefox with Violentmonkey, or Edge with Tampermonkey). Not tested on Android yet.</li></ul>
 <h3>Version 1.8.0</h3>
 <ul><li>Fixed: large puzzles stopped halfway. Zoom did not work on newer Jigidi, so the finished puzzle did not fit, and pieces had to be placed off the board.</li><li>The zoom button is now found even without a known id, and is pressed with ordinary browser events when the listeners are unknown.</li><li>Removed the mouse wheel as a zoom fallback; it could pan the whole board.</li><li>Checks before starting that the puzzle fits, and gives a clear message if not.</li><li>Builds on an already assembled part, and moves it onto the board if needed (after clearing the space).</li><li>Tested on iPad with Safari, and on a copy of the game with 594 pieces (27 × 22) that has to be zoomed out: done in about 7 seconds.</li></ul>
 <h3>Version 1.7.2</h3>
@@ -321,7 +335,7 @@ footer p { margin: 4px 0; }
     setTimeout(() => { const v = document.documentElement.getAttribute('data-jas-installed'); if (!shown) show(v); }, 1200);
   }
 
-  // Tabs; open the iPad/iPhone tab on Apple touch devices.
+  // Tabs; open the matching tab on Android and on Apple touch devices.
   const tabs = [...document.querySelectorAll('[role=tab]')];
   function select(t) {
     for (const x of tabs) { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; $(x.getAttribute('aria-controls')).hidden = !on; }
@@ -332,8 +346,9 @@ footer p { margin: 4px 0; }
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; select(n); n.focus(); }
     });
   });
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  select(ios ? $('t-ios') : $('t-pc'));
+  const ua = navigator.userAgent;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  select(/Android/i.test(ua) ? $('t-and') : ios ? $('t-ios') : $('t-pc'));
 })();
 </script>
 </body>

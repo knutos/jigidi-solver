@@ -69,7 +69,7 @@ h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.15; margin: 0; letter
 /* getting started */
 section.start { margin: 36px 0 0; }
 h2.sec { font-size: 1.35rem; margin: 0 0 12px; }
-.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); margin-bottom: 14px; }
+.tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); margin-bottom: 14px; }
 .tabs button { border: 0; background: transparent; color: var(--ink-2); font: inherit; font-weight: 600; padding: 6px 16px; border-radius: 999px; cursor: pointer; min-height: 36px; }
 .tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -78,6 +78,7 @@ h2.sec { font-size: 1.35rem; margin: 0 0 12px; }
 .steps h3 { margin: 0 0 4px; font-size: 1rem; }
 .steps p { margin: 0; color: var(--ink-2); font-size: .95rem; }
 .panel[hidden] { display: none; }
+.pnote { margin: 10px 4px 0; color: var(--ink-2); font-size: .92rem; }
 .update { margin: 14px 0 0; padding: 16px 18px; color: var(--ink-2); font-size: .95rem; }
 .update b { color: var(--ink); }
 
@@ -165,6 +166,7 @@ footer p { margin: 4px 0; }
       <div class="tabs" role="tablist" aria-label="{{t.device}}">
         <button role="tab" id="t-pc" aria-controls="p-pc" aria-selected="true">{{t.pc}}</button>
         <button role="tab" id="t-ios" aria-controls="p-ios" aria-selected="false">{{t.ios}}</button>
+        <button role="tab" id="t-and" aria-controls="p-and" aria-selected="false">Android</button>
       </div>
       <div class="panel" id="p-pc" role="tabpanel" aria-labelledby="t-pc">
         <ol class="steps">
@@ -179,6 +181,14 @@ footer p { margin: 4px 0; }
           <li class="card"><h3>{{t.ios2h}}</h3><p>{{t.ios2}}</p></li>
           <li class="card"><h3>{{t.ios3h}}</h3><p>{{t.ios3}}</p></li>
         </ol>
+      </div>
+      <div class="panel" id="p-and" role="tabpanel" aria-labelledby="t-and" hidden>
+        <ol class="steps">
+          <li class="card"><h3>{{t.and1h}}</h3><p>{{t.and1}}</p></li>
+          <li class="card"><h3>{{t.and2h}}</h3><p>{{t.and2}}</p></li>
+          <li class="card"><h3>{{t.and3h}}</h3><p>{{t.and3}}</p></li>
+        </ol>
+        <p class="pnote">{{t.andNote}}</p>
       </div>
       <p class="card update">{{t.update}}</p>
     </section>
@@ -242,7 +252,7 @@ footer p { margin: 4px 0; }
     setTimeout(() => { const v = document.documentElement.getAttribute('data-jas-installed'); if (!shown) show(v); }, 1200);
   }
 
-  // Tabs; open the iPad/iPhone tab on Apple touch devices.
+  // Tabs; open the matching tab on Android and on Apple touch devices.
   const tabs = [...document.querySelectorAll('[role=tab]')];
   function select(t) {
     for (const x of tabs) { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; $(x.getAttribute('aria-controls')).hidden = !on; }
@@ -253,8 +263,9 @@ footer p { margin: 4px 0; }
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; select(n); n.focus(); }
     });
   });
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  select(ios ? $('t-ios') : $('t-pc'));
+  const ua = navigator.userAgent;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  select(/Android/i.test(ua) ? $('t-and') : ios ? $('t-ios') : $('t-pc'));
 })();
 </script>
 </body>

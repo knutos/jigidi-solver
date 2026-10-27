@@ -64,6 +64,20 @@ def build(K, version, image_path):
         'Panelet brukes som på datamaskin: trykk <b>Solve</b>, trykk <b>Stop</b> for å avbryte (Esc finnes bare med tastatur), '
         'dra panelet med fingeren, og trykk på ringen for å minimere.')
 
+    K.h2('2.3 Android')
+    K.p('Chrome for Android støtter ikke utvidelser. Bruk <b>Firefox</b> med <b>Violentmonkey</b>, eller '
+        '<b>Microsoft Edge</b> med Tampermonkey. <i>Android er ikke testet ennå.</i>')
+    K.bullets([
+        'Installer <b>Firefox</b> fra Google Play.',
+        'I Firefox: meny (⋮) → <b>Utvidelser</b> → finn <b>Violentmonkey</b> og trykk <b>Legg til</b>. '
+        'Tampermonkey finnes også for Firefox på Android.',
+        'Åpne installasjonssiden i Firefox og trykk <b>Installer</b>. Violentmonkey viser skriptet; trykk <b>Installer</b> / <b>Bekreft</b>.',
+        'Åpne et puslespill på jigidi.com i Firefox og trykk <b>Solve</b>.',
+    ])
+    K.p('Med <b>Edge</b>: meny → <b>Utvidelser</b> → legg til <b>Tampermonkey</b>, og installer deretter skriptet fra installasjonssiden på samme måte. '
+        'Panelet brukes som på iPad: dra det med fingeren, trykk på ringen for å minimere, og trykk <b>Stop</b> for å avbryte. '
+        'Violentmonkey og Tampermonkey oppdaterer skriptet automatisk, som på datamaskin.')
+
     K.h1('3. Bruk')
     K.p('Kontrollpanelet er en liten mørk «pille» nede i venstre hjørne. Til venstre er en ring som viser fremdriften, '
         'i midten status, og til høyre en knapp. Bildet viser panelet i de ulike tilstandene:')
@@ -264,6 +278,7 @@ def build(K, version, image_path):
         f'Ny installasjonsside ({SITE}) med installer-/oppdater-knapp, versjonssjekk og dokumentasjon, på norsk og engelsk.',
         'Skriptet melder fra om installert versjon på installasjonssiden, og gjør ingenting annet der.',
         'Dokumentasjonen bygges fra én kilde til både PDF og nettside.',
+        'Installasjonsveiledning for Android (Firefox med Violentmonkey, eller Edge med Tampermonkey). Ikke testet på Android ennå.',
     ])
     K.h2('Versjon 1.8.0')
     K.bullets([
