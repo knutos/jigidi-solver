@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jigidi Automagic Solver</title>
+<meta name="description" content="Brukerskript som legger Jigidi-puslespill automatisk. Installer, oppdater og les dokumentasjonen.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2310b981' d='M5 8h3.5a2.5 2.5 0 1 1 5 0H17v3.5a2.5 2.5 0 1 1 0 5V20H5z'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f6f7f4; --surface: #ffffff; --surface-2: #eef1ec; --ink: #17201b; --ink-2: #4b5650; --line: #dde3dc;
+  --accent: #059669; --accent-ink: #ffffff; --accent-soft: #d6f2e6; --warn: #b45309; --warn-soft: #fdf0d8;
+  --note: #fdf7d7; --code: #eef1ec; --shadow: 0 1px 2px rgba(16,24,20,.06), 0 8px 24px -12px rgba(16,24,20,.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1412; --surface: #171d1a; --surface-2: #1e2622; --ink: #e8eee9; --ink-2: #a3b0a8; --line: #2a3430;
+    --accent: #34d399; --accent-ink: #053b2a; --accent-soft: #123a2c; --warn: #fbbf24; --warn-soft: #3a2c10;
+    --note: #2f2a14; --code: #1e2622; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1412; --surface: #171d1a; --surface-2: #1e2622; --ink: #e8eee9; --ink-2: #a3b0a8; --line: #2a3430;
+  --accent: #34d399; --accent-ink: #053b2a; --accent-soft: #123a2c; --warn: #fbbf24; --warn-soft: #3a2c10;
+  --note: #2f2a14; --code: #1e2622; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -12px rgba(0,0,0,.6);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .88em; }
+code { background: var(--code); padding: .1em .35em; border-radius: 4px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+/* header */
+header.top { padding: 40px 0 8px; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.logo { width: 52px; height: 52px; flex: none; }
+.logo .tr { fill: var(--surface-2); stroke: var(--line); stroke-width: 2.5; }
+.logo .pr { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 100.53; stroke-dashoffset: 30; transform: rotate(-90deg); transform-origin: 18px 18px; }
+.logo .pz { fill: var(--accent); }
+h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.15; margin: 0; letter-spacing: -.01em; }
+.tag { margin: 4px 0 0; color: var(--ink-2); }
+
+/* install card */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+.install { margin: 28px 0 0; padding: 24px; display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; }
+.vrow { display: flex; flex-wrap: wrap; gap: 8px 22px; color: var(--ink-2); font-size: .95rem; }
+.vrow b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.status { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 4px 12px 4px 10px; border-radius: 999px; font-weight: 600; font-size: .92rem; background: var(--surface-2); color: var(--ink-2); }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: .8; }
+.status.ok { background: var(--accent-soft); color: var(--accent); }
+.status.warn { background: var(--warn-soft); color: var(--warn); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px; border-radius: 999px; font-weight: 700; text-decoration: none; border: 1px solid transparent; cursor: pointer; font-size: 1rem; transition: filter .15s, transform .12s; }
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn:focus-visible, .tabs button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hint { grid-column: 1 / -1; margin: 0; font-size: .9rem; color: var(--ink-2); }
+
+/* getting started */
+section.start { margin: 36px 0 0; }
+h2.sec { font-size: 1.35rem; margin: 0 0 12px; }
+.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); margin-bottom: 14px; }
+.tabs button { border: 0; background: transparent; color: var(--ink-2); font: inherit; font-weight: 600; padding: 6px 16px; border-radius: 999px; cursor: pointer; min-height: 36px; }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.steps li { padding: 18px; counter-increment: s; position: relative; }
+.steps li::before { content: counter(s); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; margin-bottom: 10px; }
+.steps h3 { margin: 0 0 4px; font-size: 1rem; }
+.steps p { margin: 0; color: var(--ink-2); font-size: .95rem; }
+.panel[hidden] { display: none; }
+.update { margin: 14px 0 0; padding: 16px 18px; color: var(--ink-2); font-size: .95rem; }
+.update b { color: var(--ink); }
+
+/* docs */
+section.docs { margin: 48px 0 0; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 36px; align-items: start; }
+nav.toc { position: sticky; top: 20px; font-size: .92rem; }
+nav.toc h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); margin: 0 0 8px; }
+nav.toc ol { list-style: none; margin: 0 0 14px; padding: 0; }
+nav.toc a { display: block; padding: 5px 10px; border-radius: 8px; color: var(--ink-2); text-decoration: none; }
+nav.toc a:hover { background: var(--surface-2); color: var(--ink); }
+nav.toc .pdf { display: inline-flex; margin-top: 4px; }
+article.doc { padding: 8px 32px 28px; min-width: 0; }
+article.doc h2 { font-size: 1.3rem; margin: 30px 0 8px; padding-top: 6px; scroll-margin-top: 16px; }
+article.doc h2:first-child { margin-top: 18px; }
+article.doc h3 { font-size: 1.05rem; margin: 22px 0 6px; }
+article.doc p, article.doc li { color: var(--ink); }
+article.doc ul { padding-left: 1.2em; }
+article.doc li { margin: 4px 0; }
+article.doc .note { background: var(--note); padding: 12px 14px; border-radius: 10px; }
+article.doc .cap { text-align: center; color: var(--ink-2); font-size: .9rem; margin-top: 4px; }
+article.doc .shot { display: block; margin: 10px auto 0; max-width: 100%; height: auto; border-radius: 12px; }
+article.doc pre { background: var(--code); padding: 12px 14px; border-radius: 10px; overflow-x: auto; }
+article.doc pre code { background: none; padding: 0; }
+.tbl { overflow-x: auto; margin: 10px 0 16px; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+th { background: var(--surface-2); font-weight: 650; }
+tr:last-child td { border-bottom: 0; }
+
+footer { margin: 48px 0 0; padding: 24px 0 40px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: .9rem; }
+footer p { margin: 4px 0; }
+
+@media (max-width: 860px) {
+  .install { grid-template-columns: 1fr; }
+  .actions { justify-content: flex-start; }
+  .steps { grid-template-columns: 1fr; }
+  section.docs { grid-template-columns: 1fr; gap: 16px; }
+  nav.toc { position: static; }
+  article.doc { padding: 4px 18px 20px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 36 36" aria-hidden="true">
+        <circle class="tr" cx="18" cy="18" r="16"/><circle class="pr" cx="18" cy="18" r="16"/>
+        <g transform="translate(9 9) scale(.75)"><path class="pz" d="M5 8h3.5a2.5 2.5 0 1 1 5 0H17v3.5a2.5 2.5 0 1 1 0 5V20H5z"/></g>
+      </svg>
+      <div>
+        <h1>Jigidi Automagic Solver</h1>
+        <p class="tag">Brukerskript som legger Jigidi-puslespill automatisk.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="card install" aria-label="Installasjon">
+      <div>
+        <p class="status" id="status" role="status">Sjekker installert versjon…</p>
+        <div class="vrow">
+          <span>Nyeste versjon <b>1.8.1</b></span>
+          <span>Installert <b id="installed">–</b></span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn primary" id="install" href="jigidi-automagic-solver.user.js">Installer</a>
+        <a class="btn ghost" href="docs/jigidi-automagic-solver-dokumentasjon.pdf">Dokumentasjon (PDF)</a>
+      </div>
+      <p class="hint" id="hint">Krever en brukerskript-utvidelse (se under). Last siden på nytt etter installasjon for å se den installerte versjonen.</p>
+    </section>
+
+    <section class="start" aria-labelledby="start-h">
+      <h2 class="sec" id="start-h">Kom i gang</h2>
+      <div class="tabs" role="tablist" aria-label="Enhet">
+        <button role="tab" id="t-pc" aria-controls="p-pc" aria-selected="true">Datamaskin</button>
+        <button role="tab" id="t-ios" aria-controls="p-ios" aria-selected="false">iPad og iPhone</button>
+      </div>
+      <div class="panel" id="p-pc" role="tabpanel" aria-labelledby="t-pc">
+        <ol class="steps">
+          <li class="card"><h3>Installer en utvidelse</h3><p><b>Tampermonkey</b> eller <b>Violentmonkey</b> fra nettleserens utvidelsesbutikk.</p></li>
+          <li class="card"><h3>Installer skriptet</h3><p>Trykk <b>Installer</b> over og bekreft i dialogen som utvidelsen viser.</p></li>
+          <li class="card"><h3>Løs et puslespill</h3><p>Åpne et puslespill på jigidi.com og trykk <b>Solve</b> i panelet nede til venstre.</p></li>
+        </ol>
+      </div>
+      <div class="panel" id="p-ios" role="tabpanel" aria-labelledby="t-ios" hidden>
+        <ol class="steps">
+          <li class="card"><h3>Installer Userscripts</h3><p>Gratis i App Store. Åpne appen og velg en mappe for skriptene. Slå på utvidelsen under <b>Innstillinger → Safari → Utvidelser</b> (nyere iPadOS: <b>Apper → Safari → Utvidelser</b>).</p></li>
+          <li class="card"><h3>Installer skriptet</h3><p>Trykk <b>Installer</b> over. Skriptet åpnes som tekst. Trykk på <code>&lt;/&gt;</code>-ikonet i adressefeltet og velg installer.</p></li>
+          <li class="card"><h3>Løs et puslespill</h3><p>Åpne et puslespill på jigidi.com, sjekk under <code>&lt;/&gt;</code> at skriptet er på, og trykk <b>Solve</b>.</p></li>
+        </ol>
+      </div>
+      <p class="card update"><b>Oppdatering:</b> Tampermonkey og Violentmonkey oppdaterer skriptet automatisk fra GitHub. Vil du ha en ny versjon med en gang, eller bruker du iPad, åpner du denne siden og trykker <b>Oppdater</b> når den vises.</p>
+    </section>
+
+    <section class="docs" aria-label="Dokumentasjon">
+      <nav class="toc" aria-label="Innhold">
+        <h2>Dokumentasjon</h2>
+        <ol><li><a href="#d1">Oversikt</a></li><li><a href="#d2">Installasjon og oppdatering</a></li><li><a href="#d3">Bruk</a></li><li><a href="#d4">Slik virker det</a></li><li><a href="#d5">Hastighetsnivåer</a></li><li><a href="#d6">Innstillinger</a></li><li><a href="#d7">Feilmeldinger og feilsøking</a></li><li><a href="#d8">Begrensninger</a></li><li><a href="#d9">Endringslogg</a></li></ol>
+        <a class="btn ghost pdf" href="docs/jigidi-automagic-solver-dokumentasjon.pdf">Last ned PDF</a>
+      </nav>
+      <article class="card doc">
+<h2 id="d1">1. Oversikt</h2>
+<p>Jigidi Automagic Solver er et brukerskript (userscript) som legger puslespill på jigidi.com automatisk. Skriptet leser hvor hver brikke hører hjemme direkte fra spillets egen tegnekode, og drar deretter brikkene på plass én etter én med syntetiske musehendelser. Det trengs ingen bildegjenkjenning.</p>
+<p>Skriptet, denne dokumentasjonen og installasjonssiden ligger på GitHub: <b>https://github.com/knutos/jigidi-solver</b>. Installasjonssiden er <b>https://knutos.github.io/jigidi-solver/</b>.</p>
+<h2 id="d2">2. Installasjon og oppdatering</h2>
+<p>Skriptet krever en brukerskript-utvidelse i nettleseren, for eksempel <b>Tampermonkey</b> eller <b>Violentmonkey</b>.</p>
+<ul><li>Installer utvidelsen fra nettleserens utvidelsesbutikk.</li><li>Åpne installasjonssiden (https://knutos.github.io/jigidi-solver/) og trykk <b>Installer</b>. Utvidelsen viser da en installasjonsdialog.</li><li>Bekreft installasjonen. Skriptet kjører automatisk på puslespillsider på jigidi.com.</li></ul>
+<p class="note"><b>Viktig:</b> Skriptet må kjøre ved <i>document-start</i> og i sidens egen kontekst (<code>@inject-into page</code>), ellers rekker det ikke å koble seg på spillet før det starter. Har du en annen Jigidi-utvidelse aktiv (f.eks. «Bingo Solver»), bør den slås av.</p>
+<h3>2.1 Oppdatering</h3>
+<ul><li><b>Automatisk:</b> Tampermonkey og Violentmonkey ser etter nye versjoner på GitHub med jevne mellomrom (via <code>@updateURL</code>) og oppdaterer skriptet selv.</li><li><b>Med en gang:</b> Åpne installasjonssiden. Den viser hvilken versjon du har installert og hva som er nyeste. Er det en nyere versjon, trykker du <b>Oppdater</b>.</li><li><b>Fra utvidelsen:</b> I Tampermonkey: Kontrollpanel → velg skriptet → «Se etter oppdateringer».</li></ul>
+<p>Installasjonssiden kan bare se den installerte versjonen hvis utvidelsen får kjøre skriptet på siden. Skriptet gjør ingenting der annet enn å melde fra om versjonen.</p>
+<h3>2.2 iPad og iPhone (Safari)</h3>
+<p>Safari på iPad og iPhone kan kjøre brukerskript med appen <b>Userscripts</b> (gratis i App Store). <b>Tampermonkey</b> finnes også for Safari, og fungerer på samme måte som på datamaskin.</p>
+<ul><li>Installer <b>Userscripts</b> fra App Store og åpne appen én gang. Velg en mappe der skriptene skal ligge (f.eks. en mappe «Userscripts» i iCloud Drive).</li><li>Slå på utvidelsen: <b>Innstillinger → Safari → Utvidelser → Userscripts</b> (på nyere iPadOS: <b>Innstillinger → Apper → Safari → Utvidelser</b>). Gi den tilgang til jigidi.com, eller til alle nettsteder.</li><li>Åpne installasjonssiden i Safari og trykk <b>Installer</b>. Skriptet åpnes som tekst. Trykk på <code>&lt;/&gt;</code>-ikonet i adressefeltet og velg installer.</li><li>Åpne et puslespill på jigidi.com. Trykk på <code>&lt;/&gt;</code>-ikonet og sjekk at <b>Jigidi Automagic Solver</b> er slått på.</li></ul>
+<p>For å oppdatere på iPad: åpne installasjonssiden og installer på nytt på samme måte. Panelet brukes som på datamaskin: trykk <b>Solve</b>, trykk <b>Stop</b> for å avbryte (Esc finnes bare med tastatur), dra panelet med fingeren, og trykk på ringen for å minimere.</p>
+<h2 id="d3">3. Bruk</h2>
+<p>Kontrollpanelet er en liten mørk «pille» nede i venstre hjørne. Til venstre er en ring som viser fremdriften, i midten status, og til høyre en knapp. Bildet viser panelet i de ulike tilstandene:</p>
+<img class="shot" src="docs/panel.png" width="360" height="400" alt="Kontrollpanelet i tilstandene laster, klar, løser, ferdig og minimert" loading="lazy">
+<p class="cap">Panelets tilstander, ovenfra: laster, klar, løser, ferdig og minimert.</p>
+<h3>3.1 Slik løser du et puslespill</h3>
+<ul><li>Åpne et puslespill på jigidi.com. Mens brikkene lastes, snurrer ringen og knappen er grå («<i>Loading puzzle…</i>»).</li><li>Når panelet viser «<i>N pieces · ready</i>», trykker du <b>Solve</b>.</li><li>Under løsingen fylles ringen etter hvert som brikker legges, og statuslinjen viser for eksempel «<i>271/500 · 107.0/s · 3s left</i>»: lagte brikker, brikker per sekund og anslått tid igjen.</li><li>Knappen blir rød og heter <b>Stop</b>. Trykk på den, eller trykk <b>Esc</b>, for å avbryte. Brikker som allerede er lagt, blir liggende.</li><li>Når skriptet er ferdig, viser panelet antall lagte brikker, tidsbruk og brikker per sekund.</li></ul>
+<h3>3.2 Farger og symboler</h3>
+<div class="tbl"><table><thead><tr><th>Tilstand</th><th>Utseende</th><th>Betydning</th></tr></thead><tbody><tr><td>Laster</td><td>Snurrende ring, grå knapp</td><td>Brikkene er ikke ferdig registrert ennå.</td></tr><tr><td>Klar</td><td>Grønn knapp «Solve»</td><td>Puslespillet er gjenkjent og kan løses.</td></tr><tr><td>Løser</td><td>Ringen fylles, rød knapp «Stop»</td><td>Løsingen pågår. Ekte museinput mot spillet blokkeres.</td></tr><tr><td>Ferdig</td><td>Grønn hake, full ring</td><td>Alle brikker ligger riktig.</td></tr><tr><td>Delvis</td><td>Gul farge</td><td>Løsingen ble stoppet, eller noen brikker feilet.</td></tr><tr><td>Feil</td><td>Rød farge og feilmelding</td><td>Se kapittel 7.</td></tr></tbody></table></div>
+<h3>3.3 Flytte og minimere panelet</h3>
+<ul><li><b>Flytt:</b> Dra panelet hvor som helst på skjermen. Det holder seg alltid innenfor vinduet.</li><li><b>Minimer:</b> Klikk på ringen for å krympe panelet til bare ringen. Klikk igjen for å vise hele panelet. Ringen oppdateres også i minimert tilstand, og holder du musen over den, vises status som verktøytips.</li><li><b>Huskes:</b> Plassering og minimert tilstand lagres i nettleseren (nøkkelen <code>jas-ui</code> i localStorage) og gjenopprettes neste gang.</li></ul>
+<p>Mens skriptet arbeider, blokkeres ekte mus-, peker- og berøringshendelser mot spillet, slik at du ikke ved et uhell flytter brikker. Panelet selv kan fortsatt brukes. Panelet ligger i en egen Shadow DOM, slik at Jigidis stilark ikke kan påvirke utseendet.</p>
+<h2 id="d4">4. Slik virker det</h2>
+<h3>4.1 Kroker (hooks)</h3>
+<p>Ved sidelasting erstatter skriptet noen innebygde nettleserfunksjoner med egne versjoner som registrerer data og deretter kaller originalen. All informasjon lagres i det globale objektet <code>window.__jas</code>.</p>
+<div class="tbl"><table><thead><tr><th>Funksjon</th><th>Hva skriptet fanger opp</th></tr></thead><tbody><tr><td><code>addEventListener</code></td><td>Alle mus-, peker- og berøringslyttere spillet registrerer, slik at skriptet kan kalle dem direkte.</td></tr><tr><td><code>iframe.contentWindow</code></td><td>Kobler seg også på addEventListener i iframes, slik at spillet ikke kan omgå krokene ved å hente en «ren» kopi av funksjonen fra en iframe.</td></tr><tr><td><code>removeEventListener</code></td><td>Fjerner lyttere fra listen igjen, så skriptet aldri kaller utdaterte lyttere.</td></tr><tr><td><code>setPointerCapture</code></td><td>Etterligner pekerfangst for skriptets egne pekerhendelser. Uten dette ville nettleseren kaste en feil, fordi det ikke finnes noen ekte aktiv peker.</td></tr><tr><td><code>putImageData</code></td><td>Markerer at en ny brikke klippes ut på spillets kladdelerret.</td></tr><tr><td><code>drawImage</code></td><td>Tre tilfeller: (1) kildeforskyvning for brikken i originalbildet, (2) hvilket lerret som holder hvilken brikke, (3) hvor brikken tegnes på skjermen (posisjon, skala, midtpunkt).</td></tr></tbody></table></div>
+<p>Fordi Jigidi klipper brikkene i fasit-rekkefølge (rad for rad), gir rekkefølgen og kildeforskyvningen til sammen den fullstendige fasiten.</p>
+<h3>4.2 Løseren</h3>
+<p>Når du trykker <b>Solve</b>, går løseren gjennom disse trinnene:</p>
+<div class="tbl"><table><thead><tr><th>Trinn</th><th>Beskrivelse</th></tr></thead><tbody><tr><td>Gjenkjenning</td><td>Leser dimensjonene fra teksten «(kolonner × rader)» på siden og kontrollerer at antallet stemmer med antall utklipte brikker.</td></tr><tr><td>Zoom</td><td>Zoomer ut med «−»-knappen til det ferdige puslespillet tar under halvparten av brettet, under 75 % av bredden og får plass i høyden. Får det fortsatt ikke plass, stopper skriptet med en melding.</td></tr><tr><td>Fortsett</td><td>Finnes det allerede en sammensatt del (fra en tidligere kjøring eller lagt for hånd), bygger skriptet videre på den største. Ligger den delvis utenfor brettet, ryddes først plassen den skal flyttes til, og så dras hele delen inn.</td></tr><tr><td>Velg anker</td><td>Ellers prøver skriptet hver brikke som fast utgangspunkt, og velger den der det ferdige puslespillet får plass på brettet og det ligger færrest løse brikker i målområdet. Ankerbrikken flyttes ikke.</td></tr><tr><td>Legg brikker</td><td>Legger brikkene i bredde-først-rekkefølge utover fra ankeret, så hver brikke slippes ved siden av en allerede lagt nabo og smekker på plass med én gang.</td></tr><tr><td>Rydd underveis</td><td>Rett før en brikke legges, fjernes løse brikker som ligger på eller rett ved plassen dens, øverste først. Kan en slik brikke allerede legges på sin egen plass (den har en lagt nabo), legges den dit direkte. Ellers parkeres den utenfor målområdet.</td></tr><tr><td>Nytt forsøk</td><td>Brikker som feilet, prøves på nytt i en ny runde (standard 2 runder, inntil 12 forsøk per brikke).</td></tr><tr><td>Opptelling</td><td>Teller til slutt hvor mange brikker som faktisk ligger riktig i forhold til naboene.</td></tr></tbody></table></div>
+<h3>4.3 Feilgrep og korrigering</h3>
+<ul><li><b>Gripepunkt:</b> Skriptet griper i midten av brikken, ikke i et gjennomsiktig hjørne. Dekkes midten av en brikke som ligger over, prøves opptil åtte andre punkter.</li><li><b>Feil brikke flyttet:</b> Flyttes en løs brikke ved en feil, parkeres den utenfor målområdet.</li><li><b>Ferdig del flyttet:</b> Flyttes det sammensatte puslespillet ved en feil, dras det straks tilbake.</li><li><b>Tilfeldig treff:</b> Smekker en brikke på plass av seg selv, registreres den som lagt.</li></ul>
+<h3>4.4 Inndatamodus</h3>
+<p>Jigidi finnes i flere varianter som tar imot input på ulik måte. Ved starten av hver løsing sjekker skriptet hvilke lyttere spillet har registrert, og velger modus automatisk:</p>
+<div class="tbl"><table><thead><tr><th>Modus</th><th>Når den brukes</th><th>Hvordan skriptet drar brikker</th></tr></thead><tbody><tr><td><code>mouse</code></td><td>Spillet har en <code>mousedown</code>-lytter på brettet (den opprinnelige varianten).</td><td><code>mousedown</code> på brettet, <code>mousemove</code> på dokumentet, <code>mouseup</code> på vinduet.</td></tr><tr><td><code>pointer</code></td><td>Spillet bruker bare pekerhendelser, f.eks. på et DIV-element rundt brettet.</td><td><code>pointerdown</code>, <code>pointermove</code> og <code>pointerup</code> sendes gjennom en egen hendelsesformidler som etterligner nettleseren: treffpunkt, fangst-, mål- og boblefase, stopPropagation og pekerfangst. Håndterere satt som egenskaper (<code>onpointerdown = …</code>) kalles også.</td></tr><tr><td><code>native</code></td><td>Skriptet kjenner ingen av spillets lyttere, f.eks. fordi det ble lastet for sent.</td><td>Ekte hendelser sendes med <code>dispatchEvent</code>: pekerhendelser og deretter musehendelser, slik nettleseren gjør. Virker så lenge spillet ikke krever <code>isTrusted</code>.</td></tr></tbody></table></div>
+<p>Reagerer ikke spillet på tre drag på rad, prøver skriptet de andre modusene før det går ned i hastighet. Dette skjer bare så lenge ingen modus har virket ennå. Når en modus har flyttet brikker, beholdes den resten av løsingen, og også neste gang du trykker Solve på samme side. Skriptets egne panellyttere regnes ikke med.</p>
+<p>Valgt modus skrives til nettleserkonsollen som «<i>[Automagic Solver] input mode: pointer</i>» (eller <i>mouse</i> / <i>native</i>). Zoomknappen finnes via id, etikett eller et alene-stående «−», og trykkes først via kjente lyttere og deretter med vanlige nettleserhendelser. Musehjulet brukes ikke, fordi det kan flytte brettet i stedet for å zoome.</p>
+<h2 id="d5">5. Hastighetsnivåer</h2>
+<p>Skriptet starter på raskeste nivå og går automatisk ned ett nivå dersom drag gjentatte ganger ikke flytter noe. Panelet viser da «<i>Switching to speed level …</i>».</p>
+<div class="tbl"><table><thead><tr><th>Nivå</th><th>Metode</th><th>Typisk tid per drag</th></tr></thead><tbody><tr><td>0</td><td>Hele draget sendes i én synkron serie (ned, én bevegelse, opp). Ventetiden etterpå tilpasses spillet, se under.</td><td>ca. 2–25 ms</td></tr><tr><td>1</td><td>Én skjermoppdatering (animation frame) mellom hver hendelse.</td><td>ca. 80–120 ms</td></tr><tr><td>2</td><td>Den opprinnelige tidsstyrte metoden fra 1.4.1 (faste pauser).</td><td>ca. 170 ms +</td></tr></tbody></table></div>
+<h3>5.1 Ventemodus</h3>
+<p>På nivå 0 måler skriptet de første åtte dragene hvor lenge spillet trenger på å tegne resultatet, og velger deretter den raskeste ventemodusen som aldri gikk glipp av en endring:</p>
+<div class="tbl"><table><thead><tr><th>Ventemodus</th><th>Når den velges</th><th>Venting etter hvert drag</th></tr></thead><tbody><tr><td><code>sync</code></td><td>Spillet tegner brettet på nytt med en gang brikken slippes.</td><td>Ingen.</td></tr><tr><td><code>f1</code></td><td>Spillet tegner på neste skjermoppdatering.</td><td>Én skjermoppdatering (ca. 17 ms ved 60 Hz).</td></tr><tr><td><code>full</code></td><td>Spillet animerer brikkene over flere skjermoppdateringer.</td><td>Til ingenting beveger seg lenger.</td></tr></tbody></table></div>
+<p>Ser skriptet likevel en endring etter at det sluttet å vente (tre ganger), går det over til neste, tryggere modus. Valgt modus skrives til nettleserkonsollen som «<i>[Automagic Solver] wait mode: sync</i>». I en skjult fane faller ventingen tilbake til en 60 ms-tidtaker.</p>
+<p>Målt på en testkopi av spillet med 300 brikker tok versjon 1.6.1 ca. 15 sekunder. Fra versjon 1.7.0 tar det ca. 1,4 sekunder når spillet tegner med en gang, og ca. 7 sekunder når det tegner på neste skjermoppdatering. Hvor raskt det går på jigidi.com, avhenger av hvordan spillet tegner og skjermens oppdateringsfrekvens.</p>
+<h2 id="d6">6. Innstillinger</h2>
+<p>Innstillingene sendes som et objekt til <code>__jas.solve()</code>. Panelet bruker standardverdiene, men du kan kalle løseren direkte fra nettleserkonsollen:</p>
+<pre><code>await __jas.solve({
+  level: 1,          // start på nivå 1 i stedet for 0
+  maxTries: 20,
+  log: console.log,
+});</code></pre>
+<div class="tbl"><table><thead><tr><th>Innstilling</th><th>Standard</th><th>Betydning</th></tr></thead><tbody><tr><td><code>level</code></td><td>0</td><td>Startnivå for hastighet (0–2).</td></tr><tr><td><code>wait</code></td><td>'cal'</td><td>Ventemodus på nivå 0: <code>cal</code> (mål automatisk), <code>sync</code>, <code>f1</code> eller <code>full</code>.</td></tr><tr><td><code>stepDelay</code></td><td>12</td><td>Pause i ms mellom hendelser på nivå 2.</td></tr><tr><td><code>moveSteps</code></td><td>5</td><td>Antall musebevegelser per drag på nivå 2 (nivå 0 bruker 1, nivå 1 bruker 2).</td></tr><tr><td><code>settle</code></td><td>60</td><td>Ekstra pause i ms etter slipp på nivå 2.</td></tr><tr><td><code>margin</code></td><td>20</td><td>Avstand i lerretspiksler fra brettkanten til målområdet.</td></tr><tr><td><code>maxTries</code></td><td>12</td><td>Maks antall forsøk per brikke per runde.</td></tr><tr><td><code>passes</code></td><td>2</td><td>Antall runder gjennom brikker som ikke er lagt.</td></tr><tr><td><code>log</code></td><td>–</td><td>Funksjon som mottar statusmeldinger.</td></tr><tr><td><code>stop</code></td><td>–</td><td>Funksjon som returnerer true når løseren skal stoppe.</td></tr><tr><td><code>onProgress</code></td><td>–</td><td>Kalles etter hver brikke med (plassert, totalt, ok).</td></tr></tbody></table></div>
+<p>Returverdien er et objekt: <code>{ placed, total, stopped, level, wait }</code>, der <code>level</code> er hastighetsnivået og <code>wait</code> ventemodusen løseren endte på.</p>
+<h2 id="d7">7. Feilmeldinger og feilsøking</h2>
+<div class="tbl"><table><thead><tr><th>Melding / symptom</th><th>Årsak og løsning</th></tr></thead><tbody><tr><td>Loading puzzle… (ringen snurrer)</td><td>Brikkene er ikke tegnet ennå. Vent, eller last siden på nytt. Blir den stående, kjørte skriptet trolig ikke ved document-start – sjekk utvidelsens innstillinger. Slå også av andre Jigidi-skript (f.eks. «Bingo Solver»).</td></tr><tr><td>Still loading…</td><td>Ikke alle brikker er registrert ennå. Vent litt og trykk Solve igjen.</td></tr><tr><td>Puzzle not recognized</td><td>Fant ikke teksten «(kolonner × rader)», eller den stemmer ikke med antall brikker. Jigidi kan ha endret sidens oppsett.</td></tr><tr><td>Puzzle too small</td><td>Puslespill med bare én rad eller kolonne støttes ikke.</td></tr><tr><td>Game board not found</td><td>Fant ikke spillets lerret (canvas bredere enn 200 piksler).</td></tr><tr><td>Switching to speed level …</td><td>Ikke en feil: spillet trenger langsommere input, og skriptet tilpasser seg.</td></tr><tr><td>The game ignores the solver's input</td><td>Åtte drag på rad på laveste hastighet flyttet ingenting, så skriptet stoppet i stedet for å prøve i det uendelige. Jigidi har trolig endret hvordan spillet tar imot input. Se nettleserkonsollen for valgt modus (avsnitt 4.4).</td></tr><tr><td>The game ignores the solver's input – the script was injected too late</td><td>Brukerskript-utvidelsen lastet skriptet etter at spillet hadde startet, og spillet godtar ikke hendelser som ikke kommer fra en ekte mus. Last siden på nytt. Skjer det igjen: i Tampermonkey, sett Innstillinger → Konfigurasjonsmodus «Avansert» → Eksperimentelt → Injiseringsmodus til «Instant» (hvis tilgjengelig).</td></tr><tr><td>The puzzle doesn't fit on the board</td><td>Skriptet fikk ikke zoomet ut nok. Trykk «−» i Jigidi til hele puslespillet får plass, og trykk Solve igjen.</td></tr><tr><td>Could not move the assembled part onto the board</td><td>Den sammensatte delen ligger utenfor brettet og kunne ikke dras inn. Dra den inn selv og trykk Solve igjen.</td></tr><tr><td>Panelet er gult etter løsing</td><td>Noen brikker ble ikke lagt, eller du stoppet løsingen. Trykk Solve igjen for å fortsette.</td></tr><tr><td>Panelet vises ikke på iPad</td><td>Sjekk at Userscripts-utvidelsen har tilgang til jigidi.com, og at skriptet er slått på under <code>&lt;/&gt;</code>-ikonet. Last siden på nytt.</td></tr><tr><td>Panelet er borte</td><td>Det kan ha havnet utenfor skjermen etter endring av vindusstørrelse. Slett <code>jas-ui</code> i localStorage og last siden på nytt.</td></tr><tr><td>Installasjonssiden viser «ikke funnet»</td><td>Utvidelsen kjører ikke skriptet på installasjonssiden (f.eks. Userscripts uten tilgang til github.io). Skriptet kan likevel være installert; sjekk versjonen i utvidelsen.</td></tr><tr><td>Mange «FAILED»-brikker</td><td>Prøv <code>__jas.solve({ wait: 'full' })</code> fra konsollen. Hjelper ikke det, prøv å starte på nivå 1 eller 2, eller øk maxTries. Sjekk også om brikkene er rotert – rotasjon støttes ikke.</td></tr></tbody></table></div>
+<h2 id="d8">8. Begrensninger</h2>
+<ul><li><b>Rotasjon:</b> Puslespill med roterte brikker støttes ikke.</li><li><b>Avhengig av Jigidis oppbygning:</b> Skriptet forutsetter at brikkene klippes i fasit-rekkefølge med 2D-canvas, at det finnes en zoomknapp («−») og at dimensjonene står som «(k × r)» på siden. Endrer Jigidi noe av dette, slutter skriptet å virke til det oppdateres.</li><li><b>WebGL / Web Workers:</b> Tegner Jigidi med WebGL eller OffscreenCanvas i en worker, ser krokene ingenting.</li><li><b>Oppdagelse:</b> Svært jevne, rettlinjede og raske drag skiller seg tydelig fra menneskelig bruk. Dersom Jigidi logger tidsbruk eller bevegelsesmønster på serveren, kan løsninger fra skriptet oppdages. Høyere hastighet gjør dette signalet tydeligere.</li><li><b>Bruksvilkår:</b> Bruk av automatisering kan være i strid med Jigidis vilkår. Brukeren er selv ansvarlig.</li></ul>
+<h2 id="d9">9. Endringslogg</h2>
+<h3>Versjon 1.8.1</h3>
+<ul><li>Nytt hjem: https://github.com/knutos/jigidi-solver. Automatiske oppdateringer kommer nå derfra.</li><li>Ny installasjonsside (https://knutos.github.io/jigidi-solver/) med installer-/oppdater-knapp, versjonssjekk og dokumentasjon.</li><li>Skriptet melder fra om installert versjon på installasjonssiden, og gjør ingenting annet der.</li><li>Dokumentasjonen bygges fra én kilde til både PDF og nettside.</li></ul>
+<h3>Versjon 1.8.0</h3>
+<ul><li>Rettet: store puslespill stoppet midtveis. Zoom virket ikke på nyere Jigidi, så det ferdige puslespillet fikk ikke plass, og brikker skulle legges utenfor brettet.</li><li>Zoomknappen finnes nå også uten kjent id, og trykkes med vanlige nettleserhendelser når lytterne er ukjente.</li><li>Fjernet musehjul som zoom-reserve; det kunne flytte hele brettet.</li><li>Sjekker før start at puslespillet får plass, og gir en tydelig melding hvis ikke.</li><li>Bygger videre på en allerede sammensatt del, og flytter den inn på brettet om nødvendig (etter å ha ryddet plassen).</li><li>Testet på iPad med Safari, og på kopi av spillet med 594 brikker (27 × 22) som må zoomes ut: ferdig på ca. 7 sekunder.</li></ul>
+<h3>Versjon 1.7.2</h3>
+<ul><li>Rettet: løsingen kunne stoppe midtveis med «The game ignores the solver's input». Etter noen tilfeldige drag uten effekt byttet skriptet bort fra en inndatamodus som virket, og kom aldri tilbake til den.</li><li>En modus som har flyttet brikker, beholdes nå resten av løsingen og ved neste Solve på samme side.</li></ul>
+<h3>Versjon 1.7.1</h3>
+<ul><li>Rettet: «The game ignores the solver's input» når skriptet ikke fanget opp spillets lyttere. Skriptets egne panellyttere ble feilaktig tolket som spillets, slik at feil modus ble valgt.</li><li>Ny modus «native» som sender ekte hendelser med dispatchEvent når spillets lyttere er ukjente.</li><li>Støtte for håndterere satt som egenskaper (onpointerdown = …).</li><li>Kroker også i iframes, så en «ren» addEventListener fra en iframe ikke omgår skriptet.</li><li>Prøver de andre modusene automatisk før hastigheten senkes.</li><li>Varsel i konsollen når skriptet er lastet for sent.</li></ul>
+<h3>Versjon 1.7.0</h3>
+<ul><li>Adaptiv ventemodus (sync / f1 / full): skriptet måler hvor raskt spillet tegner, og venter ikke lenger enn nødvendig.</li><li>Automatisk nedgradering til tryggere ventemodus hvis en endring dukker opp for sent.</li><li>Rydding skjer rett før hver brikke legges i stedet for på forhånd. Løse brikker som kan legges, legges direkte i stedet for å parkeres først.</li><li>Én musebevegelse per drag på nivå 0 (før 2).</li><li>Ny innstilling: wait.</li><li>Målt på testkopi med 300 brikker: fra ca. 15 s til ca. 1,4 s (spill som tegner med en gang) eller ca. 7 s (spill som tegner på neste skjermoppdatering).</li></ul>
+<h3>Versjon 1.6.1</h3>
+<ul><li>Støtte for Jigidi-varianter som bare bruker pekerhendelser. Rettet en feil der skriptet hang på enkelte PC-er.</li><li>Automatisk valg av inndatamodus (mouse eller pointer) ved hver løsing.</li><li>Etterligning av pekerfangst (setPointerCapture) for skriptets egne hendelser.</li><li>Skriptet stopper med en tydelig feilmelding når spillet ikke reagerer, i stedet for å prøve i det uendelige.</li></ul>
+<h3>Versjon 1.6.0</h3>
+<ul><li>Nytt navn: <b>Jigidi Automagic Solver</b> (tidligere Jigidi Auto Solver).</li><li>Nytt kompakt kontrollpanel: fremdriftsring, tidsanslag og brikker per sekund underveis.</li><li>Fargekodet status (grønn, gul, rød) og hake når puslespillet er ferdig.</li><li>Panelet kan flyttes og minimeres. Plassering og tilstand huskes.</li><li>Esc stopper løsingen.</li><li>Panelet ligger i Shadow DOM og påvirkes ikke av Jigidis stilark.</li></ul>
+<h3>Versjon 1.5.0</h3>
+<ul><li>Adaptiv venting etter hvert drag (skjermoppdatering + bevegelsesdeteksjon) i stedet for faste pauser.</li><li>Tre hastighetsnivåer med automatisk nedtrapping.</li><li>Smart valg av ankerbrikke som lar puslespillet bygges der det allerede ligger færrest løse brikker.</li><li>Gripepunkt i brikkens midte, med unngåelse av brikker som ligger over.</li><li>Bredde-først-rekkefølge utover fra ankeret.</li><li>Mellomlagring av spillets lerret og hendelseslyttere; sjeldnere statusoppdateringer.</li><li>Zoom venter på at brettet står stille i stedet for fast 600 ms.</li></ul>
+<h3>Versjon 1.4.1</h3>
+<p>Utgangspunktet: «Jigidi Auto Solver» av WorlockM, med fast tidsstyrte drag og byggeområde øverst til venstre.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <p>Kildekode og feilmeldinger: <a href="https://github.com/knutos/jigidi-solver">https://github.com/knutos/jigidi-solver</a> · MIT-lisens · Basert på «Jigidi Auto Solver» av WorlockM.</p>
+    <p>Bruk av automatisering kan være i strid med Jigidis vilkår. Brukeren er selv ansvarlig.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const LATEST = '1.8.1';
+  const $ = (id) => document.getElementById(id);
+  const num = (v) => String(v).split('.').map((x) => parseInt(x, 10) || 0);
+  const cmp = (a, b) => { const x = num(a), y = num(b); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
+
+  let shown = false;
+  function show(v) {
+    shown = true;
+    const st = $('status'), btn = $('install'), hint = $('hint');
+    $('installed').textContent = v || 'ikke funnet';
+    if (!v) {
+      st.className = 'status'; st.textContent = 'Ikke funnet på denne enheten';
+      btn.textContent = 'Installer';
+      hint.textContent = 'Krever en brukerskript-utvidelse (se under). Er skriptet allerede installert, men utvidelsen ikke kjører det på denne siden, vises det som «ikke funnet».';
+    } else if (cmp(v, LATEST) < 0) {
+      st.className = 'status warn'; st.textContent = 'Ny versjon tilgjengelig';
+      btn.textContent = 'Oppdater til ' + LATEST;
+      hint.textContent = 'Trykk Oppdater og bekreft i utvidelsen. Last siden på nytt etterpå for å sjekke.';
+    } else {
+      st.className = 'status ok'; st.textContent = cmp(v, LATEST) > 0 ? 'Nyere enn publisert versjon' : 'Oppdatert';
+      btn.textContent = 'Installer på nytt';
+      btn.classList.replace('primary', 'ghost');
+      hint.textContent = 'Du har nyeste versjon. Utvidelsen ser selv etter oppdateringer.';
+    }
+  }
+  const now = document.documentElement.getAttribute('data-jas-installed');
+  if (now) show(now);
+  else {
+    addEventListener('jas-installed', (e) => show(e.detail));
+    setTimeout(() => { const v = document.documentElement.getAttribute('data-jas-installed'); if (!shown) show(v); }, 1200);
+  }
+
+  // Tabs; open the iPad/iPhone tab on Apple touch devices.
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  function select(t) {
+    for (const x of tabs) { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; $(x.getAttribute('aria-controls')).hidden = !on; }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; select(n); n.focus(); }
+    });
+  });
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  select(ios ? $('t-ios') : $('t-pc'));
+})();
+</script>
+</body>
+</html>
