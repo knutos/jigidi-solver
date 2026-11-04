@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jigidi Automagic Solver
 // @namespace    https://github.com/knutos/jigidi-solver
-// @version      1.8.2
+// @version      1.8.3
 // @description  Solves Jigidi puzzles automatically: pieces are dragged into place one by one.
 // @author       Knut Olav Sunde
 // @match        https://www.jigidi.com/solve/*
@@ -21,7 +21,7 @@
 // Based on "Jigidi Auto Solver" by WorlockM (MIT). https://github.com/WorlockM/jigidi-auto-solver
 
 // On the install page this script only reports its version (so the page can offer updates).
-const JAS_VERSION = '1.8.2';
+const JAS_VERSION = '1.8.3';
 const JAS_SITE = location.hostname === 'knutos.github.io';
 if (JAS_SITE) {
   const v = (typeof GM_info === 'object' && GM_info && GM_info.script && GM_info.script.version) || JAS_VERSION;
@@ -394,7 +394,16 @@ if (JAS_SITE) {
     if (!moved.length && real) st.nomove++;
     if (moved.length && st.drags <= 12) st.first.push(moved.length);   // what the first drags moved
     // Adaptive speed: if real drags keep doing nothing, the game needs slower input.
-    if (moved.length) { cfg.idle = 0; cfg.dead = 0; cfg.proven = S.good = S.mode; }
+    if (moved.length) {
+      cfg.idle = 0; cfg.dead = 0; cfg.proven = S.good = S.mode;
+      // A streak of misses lowered the speed; if the slower level then works smoothly for a while,
+      // try the faster level again (at most twice per solve, so it cannot oscillate).
+      if (cfg.level > 0 && ++cfg.okRun >= 40 && cfg.downs < 2) {
+        cfg.level--; cfg.downs++; cfg.okRun = 0;
+        cfg.log(`Back to speed level ${cfg.level}…`);
+      }
+    } else if (real) cfg.okRun = 0;
+    if (moved.length) { /* moved something: nothing more to check */ }
     else if (real && cfg.level === 2 && ++cfg.dead >= 8) {
       S.info('8 drags in a row moved nothing (mode ' + S.mode + ', level ' + cfg.level + ')');
       throw new Error('The game ignores the solver\'s input' + (S.late ? ' – the script was injected too late, see console' : '. Jigidi may have changed.'));
@@ -407,7 +416,7 @@ if (JAS_SITE) {
         cfg.tried.push(next); S.mode = next;
         S.info('no reaction, trying input mode:', next);
       } else {
-        cfg.level++; cfg.tried = [S.mode]; cfg.log(`Switching to speed level ${cfg.level}…`);
+        cfg.level++; cfg.okRun = 0; cfg.tried = [S.mode]; cfg.log(`Switching to speed level ${cfg.level}…`);
       }
     }
     return moved;
@@ -479,7 +488,7 @@ if (JAS_SITE) {
   }
 
   async function solve(opts = {}) {
-    const cfg = Object.assign({ level: 0, idle: 0, dead: 0, wait: 'cal', cal: { n: 0, sync: 0, f1: 0 }, late: 0, tried: [], proven: null, stats: { drags: 0, nomove: 0, reverted: 0, wrongGrab: 0, failed: 0, first: [] }, stepDelay: 12, moveSteps: 5, settle: 60, margin: 20, maxTries: 12, passes: 2, log: () => {} }, opts);
+    const cfg = Object.assign({ level: 0, idle: 0, dead: 0, wait: 'cal', cal: { n: 0, sync: 0, f1: 0 }, late: 0, tried: [], proven: null, okRun: 0, downs: 0, stats: { drags: 0, nomove: 0, reverted: 0, wrongGrab: 0, failed: 0, first: [] }, stepDelay: 12, moveSteps: 5, settle: 60, margin: 20, maxTries: 12, passes: 2, log: () => {} }, opts);
     const userLog = cfg.log;
     cfg.log = (m) => { if (!/^Piece \d+\/\d+ (placed|already placed)$/.test(m)) S.info(m); userLog(m); };
     const N = S.off.length;
@@ -600,17 +609,21 @@ if (JAS_SITE) {
     // Grab point: the solid middle of the piece (never a transparent tab corner), shifted to a
     // spot no later-drawn (= higher) piece covers, so we don't pick up the wrong piece.
     const GRID = [[0, 0], [-0.25, -0.25], [0.25, -0.25], [-0.25, 0.25], [0.25, 0.25], [0, -0.3], [0, 0.3], [-0.3, 0], [0.3, 0]];
-    const grabOff = (i) => {
-      const p = S.pos.get(i);
+    // k > 0 picks the k-th free point instead (used after a grab that caught nothing, so a retry
+    // never repeats the exact same miss).
+    const grabOff = (i, k = 0) => {
+      const p = S.pos.get(i), free = [];
       for (const [u, v] of GRID) {
         const qx = p.cx + u * pw, qy = p.cy + v * ph;
         let cov = false;
         for (const [j, r] of S.pos) {
           if (j !== i && r.tick > p.tick && Math.abs(r.cx - qx) < 0.62 * pw && Math.abs(r.cy - qy) < 0.62 * ph) { cov = true; break; }
         }
-        if (!cov) return { x: qx - p.x, y: qy - p.y };
+        if (!cov) { free.push({ x: qx - p.x, y: qy - p.y }); if (free.length > k) break; }
       }
-      return { x: p.cx - p.x, y: p.cy - p.y };
+      if (free.length) return free[k % free.length];
+      const [u, v] = GRID[k % GRID.length];
+      return { x: p.cx + u * pw - p.x, y: p.cy + v * ph - p.y };
     };
     const add = (p, g) => ({ x: p.x + g.x, y: p.y + g.y });
 
@@ -703,9 +716,12 @@ if (JAS_SITE) {
           if (await place(k, depth + 1, chain)) continue;
           if (placed.has(k) || !inBox(S.pos.get(k))) continue;
         }
-        const p = S.pos.get(k), g = grabOff(k), from = add(p, g), to = add(parking(undefined, [k]), g);
-        const moved = await drag(from, to, cfg);
-        if (moved.some((j) => placed.has(j))) await drag(to, from, cfg);
+        for (let miss = 0; miss < 3; miss++) {
+          const p = S.pos.get(k), g = grabOff(k, miss), from = add(p, g), to = add(parking(undefined, [k]), g);
+          const moved = await drag(from, to, cfg);
+          if (moved.some((j) => placed.has(j))) await drag(to, from, cfg);
+          if (moved.length) break;   // caught something; try another point only after a complete miss
+        }
       }
     }
 
@@ -715,11 +731,12 @@ if (JAS_SITE) {
       chain.add(i);
       await clearFor(i, depth, chain);
       if (stopped()) { chain.delete(i); return false; }
-      let ok = false;
+      let ok = false, miss = 0;
       for (let tr = 0; tr < cfg.maxTries && !ok; tr++) {
-        const p = { ...S.pos.get(i) }, t = target(i), g = grabOff(i);
+        const p = { ...S.pos.get(i) }, t = target(i), g = grabOff(i, miss);
         const from = add(p, g), to = add(t, g);
         const moved = await drag(from, to, cfg);
+        if (!moved.length) miss++;
         if (at(i, target(i)) || done(i)) { ok = true; break; }
         if (fast(cfg) && moved.includes(i)) {
           await settle();
@@ -757,8 +774,35 @@ if (JAS_SITE) {
         await place(i);
       }
     }
-    for (let k = 0; k < 2; k++) for (let i = 0; i < N; i++) if (done(i)) placed.add(i);
-    return { placed: placed.size, total: N, stopped: false, level: cfg.level, wait: cfg.wait };
+    // Final check from the real positions: which pieces are actually joined to the assembly?
+    // A piece counted earlier can have been knocked out since (e.g. a wrong grab whose drag back
+    // missed), so recount from scratch and place the loose ones again.
+    const joined = () => {
+      const par = Int32Array.from({ length: N }, (_, i) => i);
+      const find = (i) => { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; };
+      for (let i = 0; i < N; i++) {
+        if ((i + 1) % d.cols && relOK(i, i + 1, 3)) par[find(i)] = find(i + 1);
+        if (i + d.cols < N && relOK(i, i + d.cols, 3)) par[find(i)] = find(i + d.cols);
+      }
+      const size = new Map();
+      for (let i = 0; i < N; i++) { const r = find(i); size.set(r, (size.get(r) || 0) + 1); }
+      let root = anchor !== null ? find(anchor) : -1;
+      for (const [r, n] of size) if (root < 0 || n > size.get(root)) root = r;
+      const set = new Set();
+      for (let i = 0; i < N; i++) if (find(i) === root) set.add(i);
+      return set;
+    };
+    for (let rep = 0; rep < 2 && !stopped(); rep++) {
+      await settle(2, 40);
+      const main = joined(), loose = order.filter((i) => !main.has(i));
+      if (!loose.length) break;
+      S.info(`final check: ${loose.length} piece${loose.length > 1 ? 's' : ''} not joined, placing again`);
+      placed.clear();
+      for (const i of main) placed.add(i);
+      for (const i of loose) { if (stopped()) break; await place(i); }
+    }
+    const main = joined();
+    return { placed: main.size, total: N, stopped: stopped(), level: cfg.level, wait: cfg.wait };
   }
 
   // Record the outcome of every solve for the diagnostic report.

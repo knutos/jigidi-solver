@@ -154,7 +154,8 @@ def build(K, version, image_path):
                                   'topmost first. If such a piece can already go to its own spot (it has a placed neighbour), '
                                   'it is placed there directly. Otherwise it is parked outside the target area.'],
              ['Retry', 'Pieces that failed are tried again in a new round (2 rounds by default, up to 12 attempts per piece).'],
-             ['Count', 'Finally counts how many pieces actually sit correctly relative to their neighbours.']],
+             ['Final check', 'Finally checks, from the actual positions, which pieces are joined to the assembled part. '
+                            'Loose pieces (e.g. knocked out by a wrong grab) are placed again, up to two rounds. The number in the panel is the number of pieces in the assembled part.']],
             [34, 136])
 
     K.h2('4.3 Wrong grabs and correction')
@@ -164,6 +165,7 @@ def build(K, version, image_path):
         '<b>Wrong piece moved:</b> If a loose piece is moved by mistake, it is parked outside the target area.',
         '<b>Finished part moved:</b> If the assembled puzzle is moved by mistake, it is dragged straight back.',
         '<b>Lucky snap:</b> If a piece snaps into place on its own, it is recorded as placed.',
+        '<b>Miss:</b> If a grab catches nothing, the next attempt uses another grab point on the piece instead of the same point again.',
     ])
 
     K.h2('4.4 Input mode')
@@ -189,7 +191,8 @@ def build(K, version, image_path):
 
     K.h1('5. Speed levels')
     K.p('The script starts at the fastest level and automatically drops one level if drags repeatedly move nothing. '
-        'The panel then shows "<i>Switching to speed level …</i>".')
+        'The panel then shows "<i>Switching to speed level …</i>". If the next 40 drags work, the script tries the faster level again '
+        '("<i>Back to speed level …</i>"), at most twice per solve.')
     K.table([['Level', 'Method', 'Typical time per drag'],
              ['0', 'The whole drag is sent in one synchronous burst (down, one move, up). The wait afterwards adapts to the game, see below.', 'about 2–25 ms'],
              ['1', 'One screen refresh (animation frame) between each event.', 'about 80–120 ms'],
@@ -277,6 +280,13 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Changelog')
+    K.h2('Version 1.8.3')
+    K.bullets([
+        'Fixed: the panel could show all pieces as placed (e.g. 130/130) even though a piece was lying loose. The script now checks at the end, from the actual positions, which pieces are joined, and places loose pieces again.',
+        'After a grab that caught nothing, another grab point is tried instead of the same one again. This stops the speed being lowered unnecessarily.',
+        'The speed can go back up after it has been lowered, once drags work again.',
+        'Clearing the target area also tries other grab points when a grab misses.',
+    ])
     K.h2('Version 1.8.2')
     K.bullets([
         'Diagnostic report: tap the text in the panel after a solve to copy a report of what happened. Useful on iPad and phones, where no console is available.',

@@ -160,7 +160,8 @@ def build(K, version, image_path):
                                 'øverste først. Kan en slik brikke allerede legges på sin egen plass (den har en lagt nabo), '
                                 'legges den dit direkte. Ellers parkeres den utenfor målområdet.'],
              ['Nytt forsøk', 'Brikker som feilet, prøves på nytt i en ny runde (standard 2 runder, inntil 12 forsøk per brikke).'],
-             ['Opptelling', 'Teller til slutt hvor mange brikker som faktisk ligger riktig i forhold til naboene.']],
+             ['Sluttkontroll', 'Sjekker til slutt, ut fra de faktiske posisjonene, hvilke brikker som henger sammen med den ferdige delen. '
+                             'Løse brikker (f.eks. slått ut av et feilgrep) legges på nytt, inntil to runder. Tallet i panelet er antallet brikker i den ferdige delen.']],
             [34, 136])
 
     K.h2('4.3 Feilgrep og korrigering')
@@ -170,6 +171,7 @@ def build(K, version, image_path):
         '<b>Feil brikke flyttet:</b> Flyttes en løs brikke ved en feil, parkeres den utenfor målområdet.',
         '<b>Ferdig del flyttet:</b> Flyttes det sammensatte puslespillet ved en feil, dras det straks tilbake.',
         '<b>Tilfeldig treff:</b> Smekker en brikke på plass av seg selv, registreres den som lagt.',
+        '<b>Bom:</b> Fanger et grep ingenting, brukes et annet gripepunkt på brikken neste gang, i stedet for det samme punktet på nytt.',
     ])
 
     K.h2('4.4 Inndatamodus')
@@ -195,7 +197,8 @@ def build(K, version, image_path):
 
     K.h1('5. Hastighetsnivåer')
     K.p('Skriptet starter på raskeste nivå og går automatisk ned ett nivå dersom drag gjentatte ganger ikke flytter noe. '
-        'Panelet viser da «<i>Switching to speed level …</i>».')
+        'Panelet viser da «<i>Switching to speed level …</i>». Virker de neste 40 dragene, prøver skriptet det raskere nivået igjen '
+        '(«<i>Back to speed level …</i>»), høyst to ganger per løsing.')
     K.table([['Nivå', 'Metode', 'Typisk tid per drag'],
              ['0', 'Hele draget sendes i én synkron serie (ned, én bevegelse, opp). Ventetiden etterpå tilpasses spillet, se under.', 'ca. 2–25 ms'],
              ['1', 'Én skjermoppdatering (animation frame) mellom hver hendelse.', 'ca. 80–120 ms'],
@@ -283,6 +286,13 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Endringslogg')
+    K.h2('Versjon 1.8.3')
+    K.bullets([
+        'Rettet: panelet kunne vise alle brikker som lagt (f.eks. 130/130) selv om en brikke lå løs. Skriptet sjekker nå til slutt ut fra de faktiske posisjonene hvilke brikker som henger sammen, og legger løse brikker på nytt.',
+        'Etter et grep som ikke fanget noe, prøves et annet gripepunkt i stedet for det samme på nytt. Det hindrer at hastigheten senkes unødig.',
+        'Hastigheten kan gå opp igjen etter at den er senket, når dragene virker.',
+        'Rydding av målområdet prøver også andre gripepunkter når et grep bommer.',
+    ])
     K.h2('Versjon 1.8.2')
     K.bullets([
         'Feilrapport: trykk på teksten i panelet etter en løsing for å kopiere en rapport over hva som skjedde. Nyttig på iPad og telefon, der konsollen ikke er tilgjengelig.',
