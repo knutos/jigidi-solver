@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jigidi Automagic Solver
 // @namespace    https://github.com/knutos/jigidi-solver
-// @version      1.8.1
+// @version      1.8.2
 // @description  Solves Jigidi puzzles automatically: pieces are dragged into place one by one.
 // @author       Knut Olav Sunde
 // @match        https://www.jigidi.com/solve/*
@@ -21,7 +21,7 @@
 // Based on "Jigidi Auto Solver" by WorlockM (MIT). https://github.com/WorlockM/jigidi-auto-solver
 
 // On the install page this script only reports its version (so the page can offer updates).
-const JAS_VERSION = '1.8.1';
+const JAS_VERSION = '1.8.2';
 const JAS_SITE = location.hostname === 'knutos.github.io';
 if (JAS_SITE) {
   const v = (typeof GM_info === 'object' && GM_info && GM_info.script && GM_info.script.version) || JAS_VERSION;
@@ -47,11 +47,19 @@ if (JAS_SITE) {
     Lv: 0,             // bumped whenever L changes (handler cache key)
     drawTick: 0,       // increments on every piece draw (later draw = higher in z-order)
     moveTick: 0,       // drawTick of the last draw that actually moved a piece
+    diag: [],          // recent events for the diagnostic report (see S.report)
   });
+  const T0 = performance.now();
+  // Log to the console and keep the line for the diagnostic report (useful where no console is at hand, e.g. iPad).
+  S.info = (...a) => {
+    console.info('[Automagic Solver]', ...a);
+    S.diag.push(((performance.now() - T0) / 1000).toFixed(1) + 's ' + a.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join(' '));
+    if (S.diag.length > 150) S.diag.shift();
+  };
 
   // If page scripts already ran before us, listeners they registered can't be captured.
   S.late = document.readyState !== 'loading';
-  if (S.late) console.info('[Automagic Solver] injected late (readyState ' + document.readyState + ')');
+  if (S.late) S.info('injected late (readyState ' + document.readyState + ')');
 
   const RE = /^(mouse|touch|pointer|wheel|click|dblclick)/;
   const cap = (o) => (o && typeof o === 'object' ? !!o.capture : !!o);
@@ -290,7 +298,7 @@ if (JAS_SITE) {
     if (mF1 === mFull) c.f1++;
     if (c.n >= 8) {
       cfg.wait = c.sync === c.n ? 'sync' : c.f1 === c.n ? 'f1' : 'full';
-      console.info('[Automagic Solver] wait mode:', cfg.wait);
+      S.info('wait mode:', cfg.wait);
     }
   }
   // A change showed up after we had stopped waiting: wait longer from now on.
@@ -298,7 +306,7 @@ if (JAS_SITE) {
     if (++cfg.late < 3) return;
     cfg.late = 0;
     cfg.wait = cfg.wait === 'sync' ? 'f1' : 'full';
-    console.info('[Automagic Solver] wait mode:', cfg.wait);
+    S.info('wait mode:', cfg.wait);
   }
   const fast = (cfg) => cfg.level === 0 && (cfg.wait === 'sync' || cfg.wait === 'f1');
 
@@ -375,15 +383,20 @@ if (JAS_SITE) {
     };
     let moved = movedNow();
     const real = Math.hypot(to.x - from.x, to.y - from.y) > 5;
+    const st = cfg.stats;
+    st.drags++;
     if (!moved.length && real && fast(cfg)) {
       // Nothing seen yet: maybe the game just hasn't drawn it. Check properly before concluding.
       await settle();
       moved = movedNow();
       if (moved.length) late(cfg);
     }
+    if (!moved.length && real) st.nomove++;
+    if (moved.length && st.drags <= 12) st.first.push(moved.length);   // what the first drags moved
     // Adaptive speed: if real drags keep doing nothing, the game needs slower input.
     if (moved.length) { cfg.idle = 0; cfg.dead = 0; cfg.proven = S.good = S.mode; }
     else if (real && cfg.level === 2 && ++cfg.dead >= 8) {
+      S.info('8 drags in a row moved nothing (mode ' + S.mode + ', level ' + cfg.level + ')');
       throw new Error('The game ignores the solver\'s input' + (S.late ? ' – the script was injected too late, see console' : '. Jigidi may have changed.'));
     } else if (real && cfg.level < 2 && ++cfg.idle >= (cfg.proven ? 6 : 3)) {
       cfg.idle = 0;
@@ -392,7 +405,7 @@ if (JAS_SITE) {
       const next = !cfg.proven && ['pointer', 'native', 'mouse'].find((m) => !cfg.tried.includes(m));
       if (next) {
         cfg.tried.push(next); S.mode = next;
-        console.info('[Automagic Solver] no reaction, trying input mode:', next);
+        S.info('no reaction, trying input mode:', next);
       } else {
         cfg.level++; cfg.tried = [S.mode]; cfg.log(`Switching to speed level ${cfg.level}…`);
       }
@@ -466,18 +479,23 @@ if (JAS_SITE) {
   }
 
   async function solve(opts = {}) {
-    const cfg = Object.assign({ level: 0, idle: 0, dead: 0, wait: 'cal', cal: { n: 0, sync: 0, f1: 0 }, late: 0, tried: [], proven: null, stepDelay: 12, moveSteps: 5, settle: 60, margin: 20, maxTries: 12, passes: 2, log: () => {} }, opts);
+    const cfg = Object.assign({ level: 0, idle: 0, dead: 0, wait: 'cal', cal: { n: 0, sync: 0, f1: 0 }, late: 0, tried: [], proven: null, stats: { drags: 0, nomove: 0, reverted: 0, wrongGrab: 0, failed: 0, first: [] }, stepDelay: 12, moveSteps: 5, settle: 60, margin: 20, maxTries: 12, passes: 2, log: () => {} }, opts);
+    const userLog = cfg.log;
+    cfg.log = (m) => { if (!/^Piece \d+\/\d+ (placed|already placed)$/.test(m)) S.info(m); userLog(m); };
     const N = S.off.length;
     const d = dims(N);
+    S.run = { cfg, N, dims: d, t0: performance.now() };
     if (!d || N === 0 || d.cols * d.rows !== N) throw new Error(`Puzzle not recognized (pieces=${N}, dims=${JSON.stringify(d)})`);
     if (d.cols < 2 || d.rows < 2) throw new Error(`Puzzle too small (${d.cols}×${d.rows})`);
     if (S.pos.size !== N) throw new Error(`Pieces not drawn yet (${S.pos.size}/${N})`);
     const c = canvas();
     if (!c) throw new Error('Game board not found');
     const W = c.width, H = c.height;
+    Object.assign(S.run, { board: `${W}x${H}`, css: (() => { const r = c.getBoundingClientRect(); return `${Math.round(r.width)}x${Math.round(r.height)}`; })(),
+      scale0: S.pos.get(0) && +S.pos.get(0).s.toFixed(3) });
     S.mode = S.good || detectMode();     // a mode that worked earlier on this page wins
     cfg.tried.push(S.mode);
-    console.info('[Automagic Solver] input mode:', S.mode);
+    S.info('input mode:', S.mode);
     const stopped = () => !!(cfg.stop && cfg.stop());
 
     const stepX = Math.abs(S.off[1][0] - S.off[0][0]);
@@ -490,6 +508,7 @@ if (JAS_SITE) {
       if (!(await zoom(-1, 60))) break;
     }
     const s = () => S.pos.get(0).s;
+    S.run.scale = +s().toFixed(3);
     const pw = stepX * s(), ph = stepY * s();
     const cw = d.cols * pw, ch = d.rows * ph;
     const top = cfg.margin + 50;
@@ -614,6 +633,7 @@ if (JAS_SITE) {
     };
 
     async function fixWrongGrab(moved, dropAt, dragFrom) {
+      cfg.stats.wrongGrab++;
       if (moved.some((k) => placed.has(k))) { await drag(dropAt, dragFrom, cfg); return; }
       for (const k of moved) if (done(k)) markPlaced(k);
       if (moved.some((k) => !placed.has(k))) await drag(dropAt, parking(dragFrom, moved), cfg);
@@ -706,6 +726,7 @@ if (JAS_SITE) {
           if (at(i, target(i)) || done(i)) { late(cfg); ok = true; break; }
         }
         if (moved.some((k) => placed.has(k))) {
+          cfg.stats.reverted++;
           await drag(to, from, cfg);
           if (moved.includes(i)) { ok = true; break; }
           continue;
@@ -716,6 +737,7 @@ if (JAS_SITE) {
       }
       chain.delete(i);
       if (ok) markPlaced(i);
+      if (!ok) cfg.stats.failed++;
       report(i, ok, false);
       return ok;
     }
@@ -739,7 +761,48 @@ if (JAS_SITE) {
     return { placed: placed.size, total: N, stopped: false, level: cfg.level, wait: cfg.wait };
   }
 
-  S.solve = solve;
+  // Record the outcome of every solve for the diagnostic report.
+  S.solve = async (opts) => {
+    S.run = null;
+    try {
+      const r = await solve(opts);
+      if (S.run) S.run.result = r;
+      return r;
+    } catch (e) {
+      if (S.run) S.run.error = e.message; else S.run = { error: e.message };
+      S.info('error: ' + e.message);
+      throw e;
+    } finally {
+      if (S.run && S.run.t0) S.run.sec = +((performance.now() - S.run.t0) / 1000).toFixed(1);
+    }
+  };
+
+  // Plain-text diagnostic report: what happened in the last solve, plus the environment.
+  S.report = () => {
+    const r = S.run || {}, cfg = r.cfg || {}, st = cfg.stats || {};
+    const game = S.L.filter((l) => !(l.target && l.target.getRootNode && ((l.target.getRootNode().host || {}).id === 'jas-panel')));
+    const where = (t) => (t === window ? 'window' : t === document ? 'document' : (t && t.tagName ? t.tagName.toLowerCase() + (t.id ? '#' + t.id : '') : '?'));
+    const ls = {};
+    for (const l of game) { const k = l.t + '@' + where(l.target); ls[k] = (ls[k] || 0) + 1; }
+    const res = r.result || {};
+    const lines = [
+      `Jigidi Automagic Solver ${typeof JAS_VERSION === 'string' ? JAS_VERSION : '?'} – diagnostic report`,
+      `Time: ${new Date().toISOString()}`,
+      `Page: ${location.host}${location.pathname}`,
+      `Browser: ${navigator.userAgent}`,
+      `Window: ${innerWidth}x${innerHeight}, dpr ${devicePixelRatio}, touch points ${navigator.maxTouchPoints || 0}`,
+      `Injected late: ${S.late ? 'yes' : 'no'}`,
+      `Game listeners: ${Object.entries(ls).map(([k, n]) => (n > 1 ? `${k} x${n}` : k)).join(', ') || 'none captured'}`,
+      `Puzzle: ${r.N || S.off.length} pieces, ${r.dims ? r.dims.cols + 'x' + r.dims.rows : '?'}, board ${r.board || '?'} (css ${r.css || '?'}), scale ${r.scale0 || '?'} -> ${r.scale || '?'}`,
+      `Result: ${r.error ? 'ERROR ' + r.error : `${res.placed}/${res.total}${res.stopped ? ' (stopped)' : ''}`}, ${r.sec != null ? r.sec + ' s' : '?'}`,
+      `Modes: input ${S.mode || '?'} (tried ${(cfg.tried || []).join(', ') || '-'}, worked ${cfg.proven || '-'}), wait ${cfg.wait || '?'}, level ${cfg.level != null ? cfg.level : '?'}`,
+      `Drags: ${st.drags || 0} total, ${st.nomove || 0} moved nothing, ${st.reverted || 0} grabbed the assembly, ${st.wrongGrab || 0} wrong grabs, ${st.failed || 0} pieces failed; first drags moved ${(st.first || []).join(',') || '-'}`,
+      '',
+      'Log:',
+      ...S.diag.slice(-70),
+    ];
+    return lines.join('\n');
+  };
   S.zoom = zoom;
 })();
 
@@ -782,6 +845,8 @@ if (JAS_SITE) {
 .t{font-size:12.5px;font-weight:650;color:#f9fafb;letter-spacing:.01em}
 .st{margin-top:2px;font-size:11px;color:#9ca3af;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .p[data-s=err] .st{color:#fca5a5}
+.p[data-s=done] .tx,.p[data-s=warn] .tx,.p[data-s=err] .tx{cursor:pointer}
+.p[data-s=warn] .t,.p[data-s=err] .t{color:var(--a)}
 .go{flex:none;height:30px;min-width:66px;padding:0 14px;border:0;border-radius:999px;background:var(--a);color:var(--ad);
  font:inherit;font-weight:700;letter-spacing:.01em;cursor:pointer;transition:transform .12s,filter .15s,background .2s,color .2s}
 .go:hover{filter:brightness(1.1)}
@@ -824,8 +889,12 @@ if (JAS_SITE) {
     clamp();
     addEventListener('resize', clamp);
 
+    const TITLE = 'Automagic Solver';
+    let flashT = 0;
     const set = (s, text, frac) => {
       p.dataset.s = s;
+      clearTimeout(flashT);
+      $('.t').textContent = s === 'warn' || s === 'err' ? 'Tap to copy report' : TITLE;
       if (text != null) { st.textContent = text; ic.title = 'Automagic Solver · ' + text; }
       if (s === 'load') pr.style.strokeDashoffset = '';
       else if (frac != null) pr.style.strokeDashoffset = C * (1 - Math.max(0, Math.min(1, frac)));
@@ -875,12 +944,36 @@ if (JAS_SITE) {
     go.addEventListener('click', run);
     addEventListener('keydown', (e) => { if (running && e.key === 'Escape') requestStop(); }, true);
 
+    // Diagnostic report: tap the text after a solve to copy it (no console on iPad/phones).
+    const flash = (msg) => {
+      const t = $('.t'), before = t.textContent;
+      t.textContent = msg;
+      clearTimeout(flashT);
+      flashT = setTimeout(() => { t.textContent = before; }, 2500);
+    };
+    async function copyReport() {
+      const text = S.report();
+      let ok = false;
+      try { await navigator.clipboard.writeText(text); ok = true; } catch (e) { /* not allowed here */ }
+      if (!ok) {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+        document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+        try { ok = document.execCommand('copy'); } catch (e) { /* ignore */ }
+        ta.remove();
+      }
+      console.log(text);
+      flash(ok ? 'Report copied ✓' : 'Copy failed – see console');
+    }
+
     // Drag to move; a click on the ring (without dragging) toggles the minimised state.
     let d = null;
     p.addEventListener('pointerdown', (e) => {
       if (e.button !== 0 || e.target.closest('.go')) return;
       const r = host.getBoundingClientRect();
-      d = { dx: e.clientX - r.left, dy: e.clientY - r.top, x0: e.clientX, y0: e.clientY, icon: !!e.target.closest('.ic'), moved: false };
+      d = { dx: e.clientX - r.left, dy: e.clientY - r.top, x0: e.clientX, y0: e.clientY, icon: !!e.target.closest('.ic'),
+        text: !!e.target.closest('.tx'), moved: false };
       p.setPointerCapture(e.pointerId);
       e.preventDefault(); e.stopPropagation();
     });
@@ -895,6 +988,7 @@ if (JAS_SITE) {
       if (!d) return;
       if (d.moved) save();
       else if (d.icon) { pref.min = p.classList.toggle('min'); clamp(); save(); }
+      else if (d.text && /^(done|warn|err)$/.test(p.dataset.s)) copyReport();
       p.classList.remove('drag'); d = null;
     };
     p.addEventListener('pointerup', end);

@@ -114,6 +114,16 @@ def build(K, version, image_path):
         'ikke ved et uhell flytter brikker. Panelet selv kan fortsatt brukes. Panelet ligger i en egen Shadow DOM, '
         'slik at Jigidis stilark ikke kan påvirke utseendet.')
 
+    K.h2('3.4 Feilrapport')
+    K.p('Går noe galt – særlig på iPad eller telefon, der nettleserkonsollen ikke er tilgjengelig – kan panelet lage en '
+        'feilrapport. Når løsingen er ferdig, stoppet eller feilet, trykker du på teksten i panelet (det står '
+        '«<i>Tap to copy report</i>» når noe gikk galt). Rapporten kopieres til utklippstavlen, og panelet viser '
+        '«<i>Report copied ✓</i>». Lim den inn i en melding eller et GitHub-issue.')
+    K.p('Rapporten inneholder versjon, nettleser, vindusstørrelse, hvilke av spillets lyttere skriptet fant, puslespillets '
+        'størrelse og zoom, valgt inndata- og ventemodus, antall drag (og hvor mange som ikke flyttet noe, grep feil brikke '
+        'eller traff den ferdige delen), resultatet og de siste hendelsene. Den inneholder ingen personopplysninger. '
+        f'Fra konsollen får du samme tekst med {K.c("__jas.report()")}.')
+
     K.h1('4. Slik virker det')
     K.h2('4.1 Kroker (hooks)')
     K.p('Ved sidelasting erstatter skriptet noen innebygde nettleserfunksjoner med egne versjoner som '
@@ -229,6 +239,7 @@ def build(K, version, image_path):
 
     K.h1('7. Feilmeldinger og feilsøking')
     K.table([['Melding / symptom', 'Årsak og løsning'],
+             ['Noe annet går galt', 'Trykk på teksten i panelet etter løsingen for å kopiere en feilrapport (avsnitt 3.4), og send den til utvikleren.'],
              ['Loading puzzle… (ringen snurrer)', 'Brikkene er ikke tegnet ennå. Vent, eller last siden på nytt. Blir den stående, '
               'kjørte skriptet trolig ikke ved document-start – sjekk utvidelsens innstillinger. '
               'Slå også av andre Jigidi-skript (f.eks. «Bingo Solver»).'],
@@ -272,6 +283,11 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Endringslogg')
+    K.h2('Versjon 1.8.2')
+    K.bullets([
+        'Feilrapport: trykk på teksten i panelet etter en løsing for å kopiere en rapport over hva som skjedde. Nyttig på iPad og telefon, der konsollen ikke er tilgjengelig.',
+        'Skriptet teller drag, drag uten effekt, feilgrep og feilede brikker, og husker de siste hendelsene til rapporten.',
+    ])
     K.h2('Versjon 1.8.1')
     K.bullets([
         f'Nytt hjem: {REPO}. Automatiske oppdateringer kommer nå derfra.',

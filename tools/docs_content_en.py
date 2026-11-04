@@ -108,6 +108,16 @@ def build(K, version, image_path):
         'move pieces by accident. The panel itself can still be used. The panel lives in its own Shadow DOM, '
         "so Jigidi's style sheets cannot affect how it looks.")
 
+    K.h2('3.4 Diagnostic report')
+    K.p('If something goes wrong – especially on an iPad or a phone, where the browser console is not available – the panel can '
+        'produce a diagnostic report. When solving has finished, stopped or failed, tap the text in the panel (it says '
+        '"<i>Tap to copy report</i>" when something went wrong). The report is copied to the clipboard, and the panel shows '
+        '"<i>Report copied ✓</i>". Paste it into a message or a GitHub issue.')
+    K.p('The report contains the version, browser, window size, which of the game\'s listeners the script found, the puzzle '
+        'size and zoom, the chosen input and wait mode, the number of drags (and how many moved nothing, grabbed the wrong piece '
+        'or hit the assembled part), the result and the most recent events. It contains no personal information. '
+        f'From the console you get the same text with {K.c("__jas.report()")}.')
+
     K.h1('4. How it works')
     K.h2('4.1 Hooks')
     K.p('When the page loads, the script replaces a few built-in browser functions with its own versions that '
@@ -223,6 +233,7 @@ def build(K, version, image_path):
 
     K.h1('7. Error messages and troubleshooting')
     K.table([['Message / symptom', 'Cause and fix'],
+             ['Something else goes wrong', 'Tap the text in the panel after solving to copy a diagnostic report (section 3.4), and send it to the developer.'],
              ['Loading puzzle… (ring keeps spinning)', 'The pieces have not been drawn yet. Wait, or reload the page. If it stays like this, '
               "the script probably did not run at document-start – check the extension's settings. "
               'Also turn off other Jigidi scripts (e.g. "Bingo Solver").'],
@@ -266,6 +277,11 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Changelog')
+    K.h2('Version 1.8.2')
+    K.bullets([
+        'Diagnostic report: tap the text in the panel after a solve to copy a report of what happened. Useful on iPad and phones, where no console is available.',
+        'The script counts drags, drags with no effect, wrong grabs and failed pieces, and keeps the most recent events for the report.',
+    ])
     K.h2('Version 1.8.1')
     K.bullets([
         f'New home: {REPO}. Automatic updates now come from there.',
