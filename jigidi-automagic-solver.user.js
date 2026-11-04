@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jigidi Automagic Solver
 // @namespace    https://github.com/knutos/jigidi-solver
-// @version      1.8.3
+// @version      1.8.4
 // @description  Solves Jigidi puzzles automatically: pieces are dragged into place one by one.
 // @author       Knut Olav Sunde
 // @match        https://www.jigidi.com/solve/*
@@ -21,7 +21,7 @@
 // Based on "Jigidi Auto Solver" by WorlockM (MIT). https://github.com/WorlockM/jigidi-auto-solver
 
 // On the install page this script only reports its version (so the page can offer updates).
-const JAS_VERSION = '1.8.3';
+const JAS_VERSION = '1.8.4';
 const JAS_SITE = location.hostname === 'knutos.github.io';
 if (JAS_SITE) {
   const v = (typeof GM_info === 'object' && GM_info && GM_info.script && GM_info.script.version) || JAS_VERSION;
@@ -385,6 +385,7 @@ if (JAS_SITE) {
     const real = Math.hypot(to.x - from.x, to.y - from.y) > 5;
     const st = cfg.stats;
     st.drags++;
+    if (performance.now() - overlays.at > 3000) { try { clickThrough(); } catch (e) { /* ignore */ } }
     if (!moved.length && real && fast(cfg)) {
       // Nothing seen yet: maybe the game just hasn't drawn it. Check properly before concluding.
       await settle();
@@ -805,9 +806,45 @@ if (JAS_SITE) {
     return { placed: main.size, total: N, stopped: stopped(), level: cfg.level, wait: cfg.wait };
   }
 
+  // Elements lying on top of the board (ads, buttons, banners) swallow the events the solver sends
+  // to that spot, so pieces under them can't be moved. While solving, make them click-through
+  // (pointer-events: none; they stay visible) and restore them afterwards. Something that covers
+  // most of the board is left alone: that is probably the game's own input surface.
+  const overlays = { list: [], at: 0 };
+  const label = (el) => el.tagName.toLowerCase() + (el.id ? '#' + el.id.slice(0, 40) : '') + (typeof el.className === 'string' && el.className ? '.' + el.className.split(' ')[0] : '');
+  function clickThrough() {
+    const c = canvas();
+    if (!c) return;
+    overlays.at = performance.now();
+    const r = c.getBoundingClientRect(), area = r.width * r.height, added = [];
+    const x0 = Math.max(0, r.left), y0 = Math.max(0, r.top), x1 = Math.min(innerWidth, r.right), y1 = Math.min(innerHeight, r.bottom);
+    for (let round = 0; round < 6; round++) {
+      let found = 0;
+      for (let y = y0 + 6; y < y1; y += 24) for (let x = x0 + 6; x < x1; x += 24) {
+        const el = document.elementsFromPoint(x, y).find((e) => e.id !== 'jas-panel');
+        if (!el || el === c || el.contains(c) || el === document.documentElement || el === document.body) continue;
+        const b = el.getBoundingClientRect();
+        if (b.width * b.height > 0.5 * area) continue;
+        overlays.list.push([el, el.style.getPropertyValue('pointer-events'), el.style.getPropertyPriority('pointer-events')]);
+        el.style.setProperty('pointer-events', 'none', 'important');
+        added.push(label(el)); found++;
+      }
+      if (!found) break;
+    }
+    if (added.length) S.info('click-through while solving: ' + [...new Set(added)].join(', '));
+  }
+  function restoreOverlays() {
+    for (const [el, v, pr] of overlays.list.reverse()) {
+      if (v) el.style.setProperty('pointer-events', v, pr); else el.style.removeProperty('pointer-events');
+    }
+    overlays.list = [];
+  }
+  S.clickThrough = clickThrough;
+
   // Record the outcome of every solve for the diagnostic report.
   S.solve = async (opts) => {
     S.run = null;
+    try { clickThrough(); } catch (e) { S.info('click-through failed: ' + e.message); }
     try {
       const r = await solve(opts);
       if (S.run) S.run.result = r;
@@ -817,6 +854,7 @@ if (JAS_SITE) {
       S.info('error: ' + e.message);
       throw e;
     } finally {
+      restoreOverlays();
       if (S.run && S.run.t0) S.run.sec = +((performance.now() - S.run.t0) / 1000).toFixed(1);
     }
   };

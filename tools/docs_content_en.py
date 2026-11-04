@@ -165,6 +165,9 @@ def build(K, version, image_path):
         '<b>Wrong piece moved:</b> If a loose piece is moved by mistake, it is parked outside the target area.',
         '<b>Finished part moved:</b> If the assembled puzzle is moved by mistake, it is dragged straight back.',
         '<b>Lucky snap:</b> If a piece snaps into place on its own, it is recorded as placed.',
+        '<b>Ads and buttons over the board:</b> Elements lying on top of the board (e.g. an ad at the bottom right on iPad) '
+        'are made click-through while the script solves (pointer-events: none), so pieces under them can be moved. They stay visible, '
+        'and are restored when solving is done.',
         '<b>Miss:</b> If a grab catches nothing, the next attempt uses another grab point on the piece instead of the same point again.',
     ])
 
@@ -280,6 +283,11 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Changelog')
+    K.h2('Version 1.8.4')
+    K.bullets([
+        'Fixed: on iPad, solving often stopped with "The game ignores the solver\'s input". An ad lay on top of the board and caught the events, '
+        'so pieces under it (and pieces parked there) could not be moved. Elements over the board are now made click-through while the script solves.',
+    ])
     K.h2('Version 1.8.3')
     K.bullets([
         'Fixed: the panel could show all pieces as placed (e.g. 130/130) even though a piece was lying loose. The script now checks at the end, from the actual positions, which pieces are joined, and places loose pieces again.',

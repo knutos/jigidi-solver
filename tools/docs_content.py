@@ -171,6 +171,9 @@ def build(K, version, image_path):
         '<b>Feil brikke flyttet:</b> Flyttes en løs brikke ved en feil, parkeres den utenfor målområdet.',
         '<b>Ferdig del flyttet:</b> Flyttes det sammensatte puslespillet ved en feil, dras det straks tilbake.',
         '<b>Tilfeldig treff:</b> Smekker en brikke på plass av seg selv, registreres den som lagt.',
+        '<b>Reklame og knapper over brettet:</b> Elementer som ligger oppå brettet (f.eks. en annonse nede til høyre på iPad), '
+        'gjøres «klikk-gjennom» mens skriptet løser (pointer-events: none), slik at brikker under dem kan flyttes. De vises som før, '
+        'og settes tilbake når løsingen er ferdig.',
         '<b>Bom:</b> Fanger et grep ingenting, brukes et annet gripepunkt på brikken neste gang, i stedet for det samme punktet på nytt.',
     ])
 
@@ -286,6 +289,11 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Endringslogg')
+    K.h2('Versjon 1.8.4')
+    K.bullets([
+        'Rettet: på iPad stoppet løsingen ofte med «The game ignores the solver\'s input». En annonse lå oppå brettet og fanget hendelsene, '
+        'så brikker under den (og brikker parkert der) kunne ikke flyttes. Elementer over brettet gjøres nå klikk-gjennom mens skriptet løser.',
+    ])
     K.h2('Versjon 1.8.3')
     K.bullets([
         'Rettet: panelet kunne vise alle brikker som lagt (f.eks. 130/130) selv om en brikke lå løs. Skriptet sjekker nå til slutt ut fra de faktiske posisjonene hvilke brikker som henger sammen, og legger løse brikker på nytt.',
