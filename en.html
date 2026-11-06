@@ -150,7 +150,7 @@ footer p { margin: 4px 0; }
       <div>
         <p class="status" id="status" role="status">Checking installed version…</p>
         <div class="vrow">
-          <span>Latest version <b>1.8.5</b></span>
+          <span>Latest version <b>1.8.6</b></span>
           <span>Installed <b id="installed">–</b></span>
         </div>
       </div>
@@ -225,7 +225,7 @@ footer p { margin: 4px 0; }
 <h3>3.1 Solving a puzzle</h3>
 <ul><li>Open a puzzle on jigidi.com. While the pieces load, the ring spins and the button is grey ("<i>Loading puzzle…</i>").</li><li>When the panel shows "<i>N pieces · ready</i>", press <b>Solve</b>.</li><li>While solving, the ring fills up as pieces are placed, and the status line shows for example "<i>271/500 · 107.0/s · 3s left</i>": pieces placed, pieces per second and estimated time left.</li><li>The button turns red and says <b>Stop</b>. Press it, or press <b>Esc</b>, to cancel. Pieces already placed stay where they are.</li><li>When the script is done, the panel shows the number of pieces placed, the time taken and pieces per second.</li><li>If you press Solve on a puzzle that is already finished, the panel answers "<i>Already solved</i>" right away.</li></ul>
 <h3>3.2 Colours and symbols</h3>
-<div class="tbl"><table><thead><tr><th>State</th><th>Looks like</th><th>Meaning</th></tr></thead><tbody><tr><td>Loading</td><td>Spinning ring, grey button</td><td>The pieces are not fully registered yet.</td></tr><tr><td>Ready</td><td>Green "Solve" button</td><td>The puzzle has been recognised and can be solved.</td></tr><tr><td>Solving</td><td>Ring fills up, red "Stop" button</td><td>Solving is in progress. Real mouse input to the game is blocked.</td></tr><tr><td>Done</td><td>Green check mark, full ring</td><td>All pieces are in place.</td></tr><tr><td>Partial</td><td>Yellow colour</td><td>Solving was stopped, or some pieces failed.</td></tr><tr><td>Error</td><td>Red colour and an error message</td><td>See chapter 7.</td></tr></tbody></table></div>
+<div class="tbl"><table><thead><tr><th>State</th><th>Looks like</th><th>Meaning</th></tr></thead><tbody><tr><td>Loading</td><td>Spinning ring, grey button</td><td>The pieces are not fully registered yet.</td></tr><tr><td>Ready</td><td>Green "Solve" button</td><td>The puzzle has been recognised and can be solved.</td></tr><tr><td>Solving</td><td>Ring fills up, red "Stop" button</td><td>Solving is in progress. Real mouse input to the game is blocked.</td></tr><tr><td>Done</td><td>Green check mark, full ring, grey Solve button</td><td>All pieces are in place. The button stays grey while the puzzle is complete, and becomes active again if you take pieces apart.</td></tr><tr><td>Partial</td><td>Yellow colour</td><td>Solving was stopped, or some pieces failed.</td></tr><tr><td>Error</td><td>Red colour and an error message</td><td>See chapter 7.</td></tr></tbody></table></div>
 <h3>3.3 Moving and minimising the panel</h3>
 <ul><li><b>Move:</b> Drag the panel anywhere on the screen. It always stays inside the window.</li><li><b>Minimise:</b> Click the ring to shrink the panel to just the ring. Click again to show the whole panel. The ring keeps updating while minimised, and hovering over it shows the status as a tooltip.</li><li><b>Remembered:</b> Position and minimised state are saved in the browser (the <code>jas-ui</code> key in localStorage) and restored next time.</li></ul>
 <p>While the script works, real mouse, pointer and touch events to the game are blocked, so you cannot move pieces by accident. The panel itself can still be used. The panel lives in its own Shadow DOM, so Jigidi's style sheets cannot affect how it looks.</p>
@@ -269,6 +269,8 @@ footer p { margin: 4px 0; }
 <h2 id="d8">8. Limitations</h2>
 <ul><li><b>Rotation:</b> Puzzles with rotated pieces are not supported.</li><li><b>Depends on how Jigidi is built:</b> The script assumes that pieces are cut in solution order on a 2D canvas, that there is a zoom button ("−") and that the dimensions appear as "(c × r)" on the page. If Jigidi changes any of this, the script stops working until it is updated.</li><li><b>WebGL / Web Workers:</b> If Jigidi draws with WebGL or OffscreenCanvas in a worker, the hooks see nothing.</li><li><b>Detection:</b> Very even, straight and fast drags are clearly different from human use. If Jigidi logs timing or movement patterns on the server, solves by the script can be detected. Higher speed makes this signal clearer.</li><li><b>Terms of use:</b> Using automation may be against Jigidi's terms. You are responsible for your own use.</li></ul>
 <h2 id="d9">9. Changelog</h2>
+<h3>Version 1.8.6</h3>
+<ul><li>The Solve button is grey when the puzzle is complete – after a solve, on "Already solved" and when you open a puzzle you have already finished. If you take pieces apart, it becomes active again.</li></ul>
 <h3>Version 1.8.5</h3>
 <ul><li>Fixed: pressing Solve after the puzzle was finished left the panel on "Still loading…". Jigidi draws the finished picture the same way it cuts out the pieces, and the script took it for a new piece. The piece list is now locked once all pieces are read in.</li><li>A puzzle that is already finished is recognised at once ("Already solved"), without zooming or dragging.</li><li>The diagnostic report can be copied in every state, also while the script is loading or solving.</li></ul>
 <h3>Version 1.8.4</h3>
@@ -307,7 +309,7 @@ footer p { margin: 4px 0; }
 
 <script>
 (function () {
-  const LATEST = '1.8.5', LANG = 'en';
+  const LATEST = '1.8.6', LANG = 'en';
   const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
   for (const a of document.querySelectorAll('.lang a')) a.addEventListener('click', () => store('jas-lang', a.dataset.lang));
   if (LANG === 'nb' && !store('jas-lang')) {

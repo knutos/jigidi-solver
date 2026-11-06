@@ -99,7 +99,7 @@ def build(K, version, image_path):
              ['Laster', 'Snurrende ring, grå knapp', 'Brikkene er ikke ferdig registrert ennå.'],
              ['Klar', 'Grønn knapp «Solve»', 'Puslespillet er gjenkjent og kan løses.'],
              ['Løser', 'Ringen fylles, rød knapp «Stop»', 'Løsingen pågår. Ekte museinput mot spillet blokkeres.'],
-             ['Ferdig', 'Grønn hake, full ring', 'Alle brikker ligger riktig.'],
+             ['Ferdig', 'Grønn hake, full ring, grå Solve-knapp', 'Alle brikker ligger riktig. Knappen er grå så lenge puslespillet er ferdig, og blir aktiv igjen hvis du tar brikker fra hverandre.'],
              ['Delvis', 'Gul farge', 'Løsingen ble stoppet, eller noen brikker feilet.'],
              ['Feil', 'Rød farge og feilmelding', 'Se kapittel 7.']],
             [26, 52, 92])
@@ -290,6 +290,11 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Endringslogg')
+    K.h2('Versjon 1.8.6')
+    K.bullets([
+        'Solve-knappen er grå når puslespillet er ferdig – etter en løsing, ved «Already solved» og når du åpner et puslespill du allerede har lagt. '
+        'Tar du brikker fra hverandre, blir den aktiv igjen.',
+    ])
     K.h2('Versjon 1.8.5')
     K.bullets([
         'Rettet: trykket du Solve etter at puslespillet var ferdig, ble panelet stående på «Still loading…». Jigidi tegner det ferdige bildet '

@@ -93,7 +93,7 @@ def build(K, version, image_path):
              ['Loading', 'Spinning ring, grey button', 'The pieces are not fully registered yet.'],
              ['Ready', 'Green "Solve" button', 'The puzzle has been recognised and can be solved.'],
              ['Solving', 'Ring fills up, red "Stop" button', 'Solving is in progress. Real mouse input to the game is blocked.'],
-             ['Done', 'Green check mark, full ring', 'All pieces are in place.'],
+             ['Done', 'Green check mark, full ring, grey Solve button', 'All pieces are in place. The button stays grey while the puzzle is complete, and becomes active again if you take pieces apart.'],
              ['Partial', 'Yellow colour', 'Solving was stopped, or some pieces failed.'],
              ['Error', 'Red colour and an error message', 'See chapter 7.']],
             [26, 52, 92])
@@ -284,6 +284,11 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Changelog')
+    K.h2('Version 1.8.6')
+    K.bullets([
+        'The Solve button is grey when the puzzle is complete – after a solve, on "Already solved" and when you open a puzzle you have already finished. '
+        'If you take pieces apart, it becomes active again.',
+    ])
     K.h2('Version 1.8.5')
     K.bullets([
         'Fixed: pressing Solve after the puzzle was finished left the panel on "Still loading…". Jigidi draws the finished picture '

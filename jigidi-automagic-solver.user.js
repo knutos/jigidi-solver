@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jigidi Automagic Solver
 // @namespace    https://github.com/knutos/jigidi-solver
-// @version      1.8.5
+// @version      1.8.6
 // @description  Solves Jigidi puzzles automatically: pieces are dragged into place one by one.
 // @author       Knut Olav Sunde
 // @match        https://www.jigidi.com/solve/*
@@ -21,7 +21,7 @@
 // Based on "Jigidi Auto Solver" by WorlockM (MIT). https://github.com/WorlockM/jigidi-auto-solver
 
 // On the install page this script only reports its version (so the page can offer updates).
-const JAS_VERSION = '1.8.5';
+const JAS_VERSION = '1.8.6';
 const JAS_SITE = location.hostname === 'knutos.github.io';
 if (JAS_SITE) {
   const v = (typeof GM_info === 'object' && GM_info && GM_info.script && GM_info.script.version) || JAS_VERSION;
@@ -477,6 +477,24 @@ if (JAS_SITE) {
     return best;
   }
 
+  // Is every piece joined to its right and lower neighbour? (Relative positions, as Jigidi judges it.)
+  function isSolved() {
+    const N = S.off.length;
+    if (N < 2 || S.pos.size !== N) return false;
+    const d = dims(N);
+    if (!d || d.cols * d.rows !== N) return false;
+    const sc = S.pos.get(0).s, ok = (i, j) => {
+      const pi = S.pos.get(i), pj = S.pos.get(j);
+      return Math.hypot(pi.x - (pj.x + (S.off[j][0] - S.off[i][0]) * sc), pi.y - (pj.y + (S.off[j][1] - S.off[i][1]) * sc)) < 3;
+    };
+    for (let i = 0; i < N; i++) {
+      if ((i + 1) % d.cols && !ok(i, i + 1)) return false;
+      if (i + d.cols < N && !ok(i, i + d.cols)) return false;
+    }
+    return true;
+  }
+  S.isSolved = isSolved;
+
   function dims(N) {
     const found = [];
     const add = (txt) => { for (const m of txt.matchAll(/\((\d+)\s*[×x]\s*(\d+)\)/g)) found.push({ cols: +m[1], rows: +m[2] }); };
@@ -513,18 +531,7 @@ if (JAS_SITE) {
     const stepY = Math.abs(S.off[d.cols][1] - S.off[0][1]);
 
     // Already solved? Then there is nothing to do (and the game may no longer accept input).
-    {
-      const sc = S.pos.get(0).s, ok = (i, j) => {
-        const pi = S.pos.get(i), pj = S.pos.get(j);
-        return Math.hypot(pi.x - (pj.x + (S.off[j][0] - S.off[i][0]) * sc), pi.y - (pj.y + (S.off[j][1] - S.off[i][1]) * sc)) < 3;
-      };
-      let all = true;
-      for (let i = 0; i < N && all; i++) {
-        if ((i + 1) % d.cols && !ok(i, i + 1)) all = false;
-        else if (i + d.cols < N && !ok(i, i + d.cols)) all = false;
-      }
-      if (all) { S.info('already solved'); return { placed: N, total: N, stopped: false, already: true, level: cfg.level, wait: cfg.wait }; }
-    }
+    if (isSolved()) { S.info('already solved'); return { placed: N, total: N, stopped: false, already: true, level: cfg.level, wait: cfg.wait }; }
 
     for (let k = 0; k < 20 && !stopped(); k++) {
       const s = S.pos.get(0).s;
@@ -1006,9 +1013,23 @@ if (JAS_SITE) {
       clearInterval(iv);
       S.lock = true;   // all pieces known: from now on later drawing can't add "pieces"
       S.info(`pieces locked: ${S.off.length}`);
-      go.disabled = false;
-      set('ready', `${S.off.length} pieces · ready`, 0);
+      if (S.isSolved()) solvedState(`Already solved · ${S.off.length}/${S.off.length}`);
+      else { go.disabled = false; set('ready', `${S.off.length} pieces · ready`, 0); }
     }, 300);
+
+    // While the puzzle is complete, Solve has nothing to do: grey it out. If pieces are taken apart
+    // by hand afterwards, the button comes back.
+    let watch = 0;
+    function solvedState(text) {
+      set('done', text, 1);
+      go.disabled = true; go.title = 'The puzzle is solved';
+      clearInterval(watch);
+      watch = setInterval(() => {
+        if (running || S.isSolved()) return;
+        clearInterval(watch); go.disabled = false; go.title = '';
+        set('ready', `${S.off.length} pieces · ready`, 0);
+      }, 1500);
+    }
 
     // Solve / stop
     let running = false, stop = false;
@@ -1036,8 +1057,10 @@ if (JAS_SITE) {
         });
         const sec = (performance.now() - t0) / 1000;
         const ok = !r.stopped && r.placed === r.total;
-        if (r.already) set('done', `Already solved · ${r.total}/${r.total}`, 1);
-        else set(ok ? 'done' : 'warn', `${r.placed}/${r.total} · ${sec.toFixed(1)}s · ${(r.placed / sec).toFixed(1)}/s`
+        S.busy = false; running = false; go.textContent = 'Solve';
+        if (r.already) solvedState(`Already solved · ${r.total}/${r.total}`);
+        else if (ok) solvedState(`${r.placed}/${r.total} · ${sec.toFixed(1)}s · ${(r.placed / sec).toFixed(1)}/s`);
+        else set('warn', `${r.placed}/${r.total} · ${sec.toFixed(1)}s · ${(r.placed / sec).toFixed(1)}/s`
           + (r.stopped ? ' · stopped' : ''), r.placed / r.total);
       } catch (e) {
         set('err', e.message, 1); console.error(e);

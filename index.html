@@ -150,7 +150,7 @@ footer p { margin: 4px 0; }
       <div>
         <p class="status" id="status" role="status">Sjekker installert versjon…</p>
         <div class="vrow">
-          <span>Nyeste versjon <b>1.8.5</b></span>
+          <span>Nyeste versjon <b>1.8.6</b></span>
           <span>Installert <b id="installed">–</b></span>
         </div>
       </div>
@@ -225,7 +225,7 @@ footer p { margin: 4px 0; }
 <h3>3.1 Slik løser du et puslespill</h3>
 <ul><li>Åpne et puslespill på jigidi.com. Mens brikkene lastes, snurrer ringen og knappen er grå («<i>Loading puzzle…</i>»).</li><li>Når panelet viser «<i>N pieces · ready</i>», trykker du <b>Solve</b>.</li><li>Under løsingen fylles ringen etter hvert som brikker legges, og statuslinjen viser for eksempel «<i>271/500 · 107.0/s · 3s left</i>»: lagte brikker, brikker per sekund og anslått tid igjen.</li><li>Knappen blir rød og heter <b>Stop</b>. Trykk på den, eller trykk <b>Esc</b>, for å avbryte. Brikker som allerede er lagt, blir liggende.</li><li>Når skriptet er ferdig, viser panelet antall lagte brikker, tidsbruk og brikker per sekund.</li><li>Trykker du Solve på et puslespill som allerede er ferdig, svarer panelet «<i>Already solved</i>» med en gang.</li></ul>
 <h3>3.2 Farger og symboler</h3>
-<div class="tbl"><table><thead><tr><th>Tilstand</th><th>Utseende</th><th>Betydning</th></tr></thead><tbody><tr><td>Laster</td><td>Snurrende ring, grå knapp</td><td>Brikkene er ikke ferdig registrert ennå.</td></tr><tr><td>Klar</td><td>Grønn knapp «Solve»</td><td>Puslespillet er gjenkjent og kan løses.</td></tr><tr><td>Løser</td><td>Ringen fylles, rød knapp «Stop»</td><td>Løsingen pågår. Ekte museinput mot spillet blokkeres.</td></tr><tr><td>Ferdig</td><td>Grønn hake, full ring</td><td>Alle brikker ligger riktig.</td></tr><tr><td>Delvis</td><td>Gul farge</td><td>Løsingen ble stoppet, eller noen brikker feilet.</td></tr><tr><td>Feil</td><td>Rød farge og feilmelding</td><td>Se kapittel 7.</td></tr></tbody></table></div>
+<div class="tbl"><table><thead><tr><th>Tilstand</th><th>Utseende</th><th>Betydning</th></tr></thead><tbody><tr><td>Laster</td><td>Snurrende ring, grå knapp</td><td>Brikkene er ikke ferdig registrert ennå.</td></tr><tr><td>Klar</td><td>Grønn knapp «Solve»</td><td>Puslespillet er gjenkjent og kan løses.</td></tr><tr><td>Løser</td><td>Ringen fylles, rød knapp «Stop»</td><td>Løsingen pågår. Ekte museinput mot spillet blokkeres.</td></tr><tr><td>Ferdig</td><td>Grønn hake, full ring, grå Solve-knapp</td><td>Alle brikker ligger riktig. Knappen er grå så lenge puslespillet er ferdig, og blir aktiv igjen hvis du tar brikker fra hverandre.</td></tr><tr><td>Delvis</td><td>Gul farge</td><td>Løsingen ble stoppet, eller noen brikker feilet.</td></tr><tr><td>Feil</td><td>Rød farge og feilmelding</td><td>Se kapittel 7.</td></tr></tbody></table></div>
 <h3>3.3 Flytte og minimere panelet</h3>
 <ul><li><b>Flytt:</b> Dra panelet hvor som helst på skjermen. Det holder seg alltid innenfor vinduet.</li><li><b>Minimer:</b> Klikk på ringen for å krympe panelet til bare ringen. Klikk igjen for å vise hele panelet. Ringen oppdateres også i minimert tilstand, og holder du musen over den, vises status som verktøytips.</li><li><b>Huskes:</b> Plassering og minimert tilstand lagres i nettleseren (nøkkelen <code>jas-ui</code> i localStorage) og gjenopprettes neste gang.</li></ul>
 <p>Mens skriptet arbeider, blokkeres ekte mus-, peker- og berøringshendelser mot spillet, slik at du ikke ved et uhell flytter brikker. Panelet selv kan fortsatt brukes. Panelet ligger i en egen Shadow DOM, slik at Jigidis stilark ikke kan påvirke utseendet.</p>
@@ -269,6 +269,8 @@ footer p { margin: 4px 0; }
 <h2 id="d8">8. Begrensninger</h2>
 <ul><li><b>Rotasjon:</b> Puslespill med roterte brikker støttes ikke.</li><li><b>Avhengig av Jigidis oppbygning:</b> Skriptet forutsetter at brikkene klippes i fasit-rekkefølge med 2D-canvas, at det finnes en zoomknapp («−») og at dimensjonene står som «(k × r)» på siden. Endrer Jigidi noe av dette, slutter skriptet å virke til det oppdateres.</li><li><b>WebGL / Web Workers:</b> Tegner Jigidi med WebGL eller OffscreenCanvas i en worker, ser krokene ingenting.</li><li><b>Oppdagelse:</b> Svært jevne, rettlinjede og raske drag skiller seg tydelig fra menneskelig bruk. Dersom Jigidi logger tidsbruk eller bevegelsesmønster på serveren, kan løsninger fra skriptet oppdages. Høyere hastighet gjør dette signalet tydeligere.</li><li><b>Bruksvilkår:</b> Bruk av automatisering kan være i strid med Jigidis vilkår. Brukeren er selv ansvarlig.</li></ul>
 <h2 id="d9">9. Endringslogg</h2>
+<h3>Versjon 1.8.6</h3>
+<ul><li>Solve-knappen er grå når puslespillet er ferdig – etter en løsing, ved «Already solved» og når du åpner et puslespill du allerede har lagt. Tar du brikker fra hverandre, blir den aktiv igjen.</li></ul>
 <h3>Versjon 1.8.5</h3>
 <ul><li>Rettet: trykket du Solve etter at puslespillet var ferdig, ble panelet stående på «Still loading…». Jigidi tegner det ferdige bildet på samme måte som når brikkene klippes ut, og skriptet trodde det var en ny brikke. Brikkelisten låses nå når alle brikker er lest inn.</li><li>Et puslespill som allerede er ferdig, gjenkjennes straks («Already solved»), uten zoom eller drag.</li><li>Feilrapporten kan kopieres i alle tilstander, også mens skriptet laster eller løser.</li></ul>
 <h3>Versjon 1.8.4</h3>
@@ -307,7 +309,7 @@ footer p { margin: 4px 0; }
 
 <script>
 (function () {
-  const LATEST = '1.8.5', LANG = 'nb';
+  const LATEST = '1.8.6', LANG = 'nb';
   const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
   for (const a of document.querySelectorAll('.lang a')) a.addEventListener('click', () => store('jas-lang', a.dataset.lang));
   if (LANG === 'nb' && !store('jas-lang')) {

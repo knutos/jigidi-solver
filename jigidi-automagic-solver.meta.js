@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jigidi Automagic Solver
 // @namespace    https://github.com/knutos/jigidi-solver
-// @version      1.8.5
+// @version      1.8.6
 // @description  Solves Jigidi puzzles automatically: pieces are dragged into place one by one.
 // @author       Knut Olav Sunde
 // @match        https://www.jigidi.com/solve/*
