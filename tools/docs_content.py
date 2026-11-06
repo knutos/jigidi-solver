@@ -92,6 +92,7 @@ def build(K, version, image_path):
         'Knappen blir rød og heter <b>Stop</b>. Trykk på den, eller trykk <b>Esc</b>, for å avbryte. '
         'Brikker som allerede er lagt, blir liggende.',
         'Når skriptet er ferdig, viser panelet antall lagte brikker, tidsbruk og brikker per sekund.',
+        'Trykker du Solve på et puslespill som allerede er ferdig, svarer panelet «<i>Already solved</i>» med en gang.',
     ])
     K.h2('3.2 Farger og symboler')
     K.table([['Tilstand', 'Utseende', 'Betydning'],
@@ -116,7 +117,7 @@ def build(K, version, image_path):
 
     K.h2('3.4 Feilrapport')
     K.p('Går noe galt – særlig på iPad eller telefon, der nettleserkonsollen ikke er tilgjengelig – kan panelet lage en '
-        'feilrapport. Når løsingen er ferdig, stoppet eller feilet, trykker du på teksten i panelet (det står '
+        'feilrapport. Trykk på teksten i panelet når som helst – også hvis skriptet ser ut til å henge (når noe gikk galt, står det '
         '«<i>Tap to copy report</i>» når noe gikk galt). Rapporten kopieres til utklippstavlen, og panelet viser '
         '«<i>Report copied ✓</i>». Lim den inn i en melding eller et GitHub-issue.')
     K.p('Rapporten inneholder versjon, nettleser, vindusstørrelse, hvilke av spillets lyttere skriptet fant, puslespillets '
@@ -289,6 +290,13 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Endringslogg')
+    K.h2('Versjon 1.8.5')
+    K.bullets([
+        'Rettet: trykket du Solve etter at puslespillet var ferdig, ble panelet stående på «Still loading…». Jigidi tegner det ferdige bildet '
+        'på samme måte som når brikkene klippes ut, og skriptet trodde det var en ny brikke. Brikkelisten låses nå når alle brikker er lest inn.',
+        'Et puslespill som allerede er ferdig, gjenkjennes straks («Already solved»), uten zoom eller drag.',
+        'Feilrapporten kan kopieres i alle tilstander, også mens skriptet laster eller løser.',
+    ])
     K.h2('Versjon 1.8.4')
     K.bullets([
         'Rettet: på iPad stoppet løsingen ofte med «The game ignores the solver\'s input». En annonse lå oppå brettet og fanget hendelsene, '

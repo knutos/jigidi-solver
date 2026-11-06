@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Jigidi Automagic Solver
 // @namespace    https://github.com/knutos/jigidi-solver
-// @version      1.8.4
+// @version      1.8.5
 // @description  Solves Jigidi puzzles automatically: pieces are dragged into place one by one.
 // @author       Knut Olav Sunde
 // @match        https://www.jigidi.com/solve/*
@@ -21,7 +21,7 @@
 // Based on "Jigidi Auto Solver" by WorlockM (MIT). https://github.com/WorlockM/jigidi-auto-solver
 
 // On the install page this script only reports its version (so the page can offer updates).
-const JAS_VERSION = '1.8.4';
+const JAS_VERSION = '1.8.5';
 const JAS_SITE = location.hostname === 'knutos.github.io';
 if (JAS_SITE) {
   const v = (typeof GM_info === 'object' && GM_info && GM_info.script && GM_info.script.version) || JAS_VERSION;
@@ -110,14 +110,15 @@ if (JAS_SITE) {
   const P = CanvasRenderingContext2D.prototype;
   const oPut = P.putImageData, oDraw = P.drawImage;
   P.putImageData = function (...a) {
-    if (this.canvas.width > 10) { S.n++; S.scratch = this.canvas; }
+    // Once all pieces are known (S.lock), later drawing (e.g. the finished picture) must not add pieces.
+    if (!S.lock && this.canvas.width > 10) { S.n++; S.scratch = this.canvas; }
     return oPut.apply(this, a);
   };
   P.drawImage = function (src, ...a) {
-    const dst = this.canvas;
-    if (S.n >= 0 && dst === S.scratch && src !== dst && S.off[S.n] === undefined && a.length === 2) {
+    const dst = this.canvas, cut = !S.lock;   // after S.lock only positions are tracked
+    if (cut && S.n >= 0 && dst === S.scratch && src !== dst && S.off[S.n] === undefined && a.length === 2) {
       S.off[S.n] = [a[0], a[1]];
-    } else if (src === S.scratch && dst !== src && !S.piece.has(dst)) {
+    } else if (cut && src === S.scratch && dst !== src && !S.piece.has(dst)) {
       S.piece.set(dst, S.n);
     } else if (dst.isConnected && S.piece.has(src)) {
       const t = this.getTransform(), i = S.piece.get(src);
@@ -511,7 +512,21 @@ if (JAS_SITE) {
     const stepX = Math.abs(S.off[1][0] - S.off[0][0]);
     const stepY = Math.abs(S.off[d.cols][1] - S.off[0][1]);
 
-    for (let k = 0; k < 20; k++) {
+    // Already solved? Then there is nothing to do (and the game may no longer accept input).
+    {
+      const sc = S.pos.get(0).s, ok = (i, j) => {
+        const pi = S.pos.get(i), pj = S.pos.get(j);
+        return Math.hypot(pi.x - (pj.x + (S.off[j][0] - S.off[i][0]) * sc), pi.y - (pj.y + (S.off[j][1] - S.off[i][1]) * sc)) < 3;
+      };
+      let all = true;
+      for (let i = 0; i < N && all; i++) {
+        if ((i + 1) % d.cols && !ok(i, i + 1)) all = false;
+        else if (i + d.cols < N && !ok(i, i + d.cols)) all = false;
+      }
+      if (all) { S.info('already solved'); return { placed: N, total: N, stopped: false, already: true, level: cfg.level, wait: cfg.wait }; }
+    }
+
+    for (let k = 0; k < 20 && !stopped(); k++) {
       const s = S.pos.get(0).s;
       if (d.cols * stepX * s * d.rows * stepY * s < 0.5 * W * H && d.cols * stepX * s < 0.75 * W
         && (d.rows + 1) * stepY * s < H - 2 * cfg.margin - 50) break;
@@ -927,7 +942,7 @@ if (JAS_SITE) {
 .t{font-size:12.5px;font-weight:650;color:#f9fafb;letter-spacing:.01em}
 .st{margin-top:2px;font-size:11px;color:#9ca3af;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .p[data-s=err] .st{color:#fca5a5}
-.p[data-s=done] .tx,.p[data-s=warn] .tx,.p[data-s=err] .tx{cursor:pointer}
+.p .tx{cursor:pointer}
 .p[data-s=warn] .t,.p[data-s=err] .t{color:var(--a)}
 .go{flex:none;height:30px;min-width:66px;padding:0 14px;border:0;border-radius:999px;background:var(--a);color:var(--ad);
  font:inherit;font-weight:700;letter-spacing:.01em;cursor:pointer;transition:transform .12s,filter .15s,background .2s,color .2s}
@@ -984,9 +999,14 @@ if (JAS_SITE) {
 
     // Ready detection
     const ready = () => S.off.length > 1 && S.pos.size === S.off.length;
+    let lastN = -1;
     const iv = setInterval(() => {
-      if (!ready()) return;
-      clearInterval(iv); go.disabled = false;
+      if (!ready()) { lastN = -1; return; }
+      if (S.off.length !== lastN) { lastN = S.off.length; return; }   // same count on two checks in a row
+      clearInterval(iv);
+      S.lock = true;   // all pieces known: from now on later drawing can't add "pieces"
+      S.info(`pieces locked: ${S.off.length}`);
+      go.disabled = false;
       set('ready', `${S.off.length} pieces · ready`, 0);
     }, 300);
 
@@ -996,7 +1016,7 @@ if (JAS_SITE) {
     const requestStop = () => { stop = true; go.textContent = 'Stopping'; };
     async function run() {
       if (running) return requestStop();
-      if (!ready()) return set('load', 'Still loading…');
+      if (!ready() || !S.lock) return set('load', 'Still loading…');
       running = true; stop = false; S.busy = true;
       go.textContent = 'Stop'; set('run', 'Starting…', 0);
       const t0 = performance.now();
@@ -1016,7 +1036,8 @@ if (JAS_SITE) {
         });
         const sec = (performance.now() - t0) / 1000;
         const ok = !r.stopped && r.placed === r.total;
-        set(ok ? 'done' : 'warn', `${r.placed}/${r.total} · ${sec.toFixed(1)}s · ${(r.placed / sec).toFixed(1)}/s`
+        if (r.already) set('done', `Already solved · ${r.total}/${r.total}`, 1);
+        else set(ok ? 'done' : 'warn', `${r.placed}/${r.total} · ${sec.toFixed(1)}s · ${(r.placed / sec).toFixed(1)}/s`
           + (r.stopped ? ' · stopped' : ''), r.placed / r.total);
       } catch (e) {
         set('err', e.message, 1); console.error(e);
@@ -1070,7 +1091,7 @@ if (JAS_SITE) {
       if (!d) return;
       if (d.moved) save();
       else if (d.icon) { pref.min = p.classList.toggle('min'); clamp(); save(); }
-      else if (d.text && /^(done|warn|err)$/.test(p.dataset.s)) copyReport();
+      else if (d.text) copyReport();
       p.classList.remove('drag'); d = null;
     };
     p.addEventListener('pointerup', end);

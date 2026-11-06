@@ -86,6 +86,7 @@ def build(K, version, image_path):
         'The button turns red and says <b>Stop</b>. Press it, or press <b>Esc</b>, to cancel. '
         'Pieces already placed stay where they are.',
         'When the script is done, the panel shows the number of pieces placed, the time taken and pieces per second.',
+        'If you press Solve on a puzzle that is already finished, the panel answers "<i>Already solved</i>" right away.',
     ])
     K.h2('3.2 Colours and symbols')
     K.table([['State', 'Looks like', 'Meaning'],
@@ -110,7 +111,7 @@ def build(K, version, image_path):
 
     K.h2('3.4 Diagnostic report')
     K.p('If something goes wrong – especially on an iPad or a phone, where the browser console is not available – the panel can '
-        'produce a diagnostic report. When solving has finished, stopped or failed, tap the text in the panel (it says '
+        'produce a diagnostic report. Tap the text in the panel at any time – also if the script seems to hang (it says '
         '"<i>Tap to copy report</i>" when something went wrong). The report is copied to the clipboard, and the panel shows '
         '"<i>Report copied ✓</i>". Paste it into a message or a GitHub issue.')
     K.p('The report contains the version, browser, window size, which of the game\'s listeners the script found, the puzzle '
@@ -283,6 +284,13 @@ def build(K, version, image_path):
     ])
 
     K.h1('9. Changelog')
+    K.h2('Version 1.8.5')
+    K.bullets([
+        'Fixed: pressing Solve after the puzzle was finished left the panel on "Still loading…". Jigidi draws the finished picture '
+        'the same way it cuts out the pieces, and the script took it for a new piece. The piece list is now locked once all pieces are read in.',
+        'A puzzle that is already finished is recognised at once ("Already solved"), without zooming or dragging.',
+        'The diagnostic report can be copied in every state, also while the script is loading or solving.',
+    ])
     K.h2('Version 1.8.4')
     K.bullets([
         'Fixed: on iPad, solving often stopped with "The game ignores the solver\'s input". An ad lay on top of the board and caught the events, '
